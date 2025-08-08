@@ -1,5 +1,9 @@
 [build-system]
-requires = ["setuptools<81", "wheel"]
+# Rely on whatever setuptools is available in the environment to avoid
+# failing when a specific version cannot be downloaded (e.g. on offline
+# systems).  Version 61 introduced the pyproject configuration we use so
+# we only need to require that or newer.
+requires = ["setuptools>=61", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -15,7 +19,6 @@ dependencies = [
     "pygraphviz>=1.7",
     "graphviz>=0.14",
     "tqdm>=4.62.3",
-    "pytest>=3.0.5",
     "seaborn>=0.11.0",
     "pandas>=1.3.5",
     "matplotlib>=3.5.1",
@@ -23,8 +26,7 @@ dependencies = [
     "networkx>=2.6.3",
     "numpy>=1.21.6",
     "piflib>=0.1.1",
-    "scipy>=1.7.3",
-    "setuptools>=42"
+    "scipy>=1.7.3"
 ]
 
 [project.scripts]
@@ -33,14 +35,19 @@ metaprivBIDS = 'metaprivBIDS.metaprivBIDS:main'
 [project.urls]
 repository = "https://github.com/cpernet/metaprivBIDS"
 
-[tool.setuptools]
-packages = ["metaprivBIDS", "metaprivBIDS.corelogic"]
+[tool.setuptools.packages.find]
+include = ["metaprivBIDS*"]
 
 [project.optional-dependencies]
 docs = [
     "sphinx>=4.0",
     "sphinx_rtd_theme>=1.0",
     "myst-parser>=0.13"  # If using Markdown with Sphinx
+]
+
+# Test dependencies
+test = [
+    "pytest>=3.0.5",
 ]
 
 [tool.codespell]
