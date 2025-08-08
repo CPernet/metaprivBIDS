@@ -10,6 +10,8 @@ from piflib.pif_calculator import compute_cigs
 
 
 import io
+# Ensure rpy2 uses ABI mode on platforms where API mode is unsupported
+os.environ.setdefault("RPY2_CFFI_MODE", "ABI")
 from rpy2 import robjects
 from rpy2.robjects.packages import importr
 from rpy2.robjects import pandas2ri

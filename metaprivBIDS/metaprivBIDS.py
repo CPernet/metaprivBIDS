@@ -21,6 +21,10 @@ import piflib.pif_calculator as pif
 import seaborn as sns
 import matplotlib.colors as mcolors
 import io
+import os
+
+# Ensure rpy2 uses ABI mode on platforms where API mode is unsupported
+os.environ.setdefault("RPY2_CFFI_MODE", "ABI")
 
 
 from rpy2 import robjects
