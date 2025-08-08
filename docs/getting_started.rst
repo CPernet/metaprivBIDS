@@ -4,10 +4,10 @@ Getting Started
 Welcome to the Getting Started guide for metaprivBIDS.
 This Python build tool enables a user to calculate a variety of different data privacy metrics on tabular data from a user interface.  
 
-installation
+Installation
 ------------
 
-The metaprivBIDS software runs on multiple platforms (e.g. Linux, MacOS, Windows) that have a Python 3.7 installation.
+The metaprivBIDS software runs on multiple platforms (e.g. Linux, macOS, Windows) that have a Python 3.7 installation.
 It is recommended (but not required) to first create a virtual environment. This can be done with ``venv`` or, if pygraphviz fails (as it happens), with ``conda``.
 
 .. code-block:: bash
@@ -30,7 +30,7 @@ You can then install metaprivBIDS by cloning the git repository.
     git clone https://github.com/CPernet/metaprivBIDS.git
 
 
-To execute the program make sure all dependencies from pyproject.toml is available in a python 3.7 environment. 
+To execute the program, make sure all dependencies from pyproject.toml are available in a Python 3.7 environment.
 This can be done by running
 
 .. code-block:: bash
@@ -100,5 +100,5 @@ Next Steps
 ----------
 
 
-- Explore the :ref:`Examples <examples_section>` to see Interactive Tutorial of how to navigate the graphical user interface for MetaprivBIDS.
+- Explore the :ref:`Examples <examples_section>` to see an interactive tutorial on how to navigate the graphical user interface for MetaprivBIDS.
 
