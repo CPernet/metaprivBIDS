@@ -6,15 +6,15 @@
 Welcome to metaprivBIDS documentation!
 ======================================================
 
-This documentation provides an overview of the metaprivBIDS Graphical User Interface, including installation instructions, basic usage, and tutorial to get you started.
+This documentation provides an overview of the metaprivBIDS Graphical User Interface, including installation instructions, basic usage, and a tutorial to get you started.
 
-metaprivBIDS provides tool for data risk assessment, including methods:
+metaprivBIDS provides tools for data risk assessment, including methods:
 
 - K-anonymity [1]_
    - Searching each record in the dataset to see if they are indistinguishable from at least k − 1 other records with respect to a set of quasi-identifiers.
 
 - ℓ-diversity [2]_
-   - Looking at the diversity of the sensitive attribute. A dataset satisfies l-diversity if each group of indistinguishable records has at least l diverse values for the sensitive attribute(s), preventing easy inference of sensitive information.
+   - Looking at the diversity of the sensitive attribute. A dataset satisfies ℓ-diversity if each group of indistinguishable records has at least ℓ diverse values for the sensitive attribute(s), preventing easy inference of sensitive information.
 
 - Sample Unique Detection Algorithm (SUDA) [3]_
    - The SUDA (Sample Unique Detection Algorithm) identifies records in a dataset that are unique based on a combination of quasi-identifiers. It works by flagging records with rare attribute combinations, indicating a higher risk of re-identification.
@@ -24,7 +24,7 @@ metaprivBIDS provides tool for data risk assessment, including methods:
 
 
 - K-Global 
-   - K-Global attempts to capture individual variables K-anonymity contribution in the context of all other quasi-identifiers. This is done by evaluating the difference in unique row, given the removal of a given variable. To then account for the fact that e.g. continuous variables often result in more unique entries we normalise by the unique value counts of the column. Subsequently penalising variables with few unique values but a high impact on unique rows. 
+   - K-Global attempts to capture an individual variable's k-anonymity contribution in the context of all other quasi-identifiers. This is done by evaluating the difference in unique rows when a given variable is removed. To account for the fact that, for example, continuous variables often result in more unique entries, we normalise by each column's unique value counts, subsequently penalising variables with few unique values but a high impact on unique rows.
 
 
 .. [1] Sweeney, L. (2002). k-Anonymity: A Model for Protecting Privacy. *International Journal of Uncertainty, Fuzziness and Knowledge-Based Systems*, 10(05), 557-570.

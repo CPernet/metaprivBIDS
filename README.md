@@ -9,7 +9,7 @@ This Python build tool enables a given user to calculate a variety of different 
 
 # Methods
 
-#### Assesing Privacy risk: 
+#### Assessing Privacy risk:
 
 - K-anonymity [^1]
 - ℓ-diversity [^2]
@@ -31,14 +31,14 @@ This Python build tool enables a given user to calculate a variety of different 
 
 # Input data format
 
-Input can be in either CSV or TSV format. 
-For meta information an option of load of json file is possible. 
+Input can be in either CSV or TSV format.
+For meta information, an option to load a JSON file is available.
 
 # Software installation
 
 
 ### Option 1
-The metaprivBIDS software runs on multiple platforms (e.g. Linux, MacOS, Windows) that have a Python 3 installation.
+The metaprivBIDS software runs on multiple platforms (e.g. Linux, macOS, Windows) that have a Python 3 installation.
 It is recommended (but not required) to first create a virtual environment.
 
   
@@ -59,7 +59,7 @@ Activates the environment.
 conda activate venv 
 ```
 
-Graphviz requires system level dependencies as well as rpy2 and might need to be installed with 
+Graphviz requires system-level dependencies as well as rpy2 and might need to be installed with
 
 ```console
 conda create --name venv -c conda-forge "python>=3.7" graphviz pygraphviz r-base r-sdcMicro rpy2
@@ -102,7 +102,7 @@ git clone https://github.com/CPernet/metaprivBIDS.git
 
 # Dependencies
 
-To execute the program make sure all dependencies from pyproject.toml is available in a python 3.7 environment as stated in the software installation. 
+To execute the program, make sure all dependencies from pyproject.toml are available in a Python 3.7 environment as stated in the software installation.
 This can be done by first ```cd``` into the MetaprivBIDS directory and then running
 
 ```console
