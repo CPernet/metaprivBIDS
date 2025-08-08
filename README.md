@@ -49,10 +49,11 @@ conda config --add pkgs_dirs ~/conda_pkgs
 ```
 Creates the environment. 
 
-Graphviz requires system-level dependencies as well as rpy2 and can be installed directly when building the virtual environement (on windows, also make sure you have C++ 14 or above)
+Graphviz requires system-level dependencies as well as rpy2 and can be installed directly when building the virtual environment. The `pygraphviz` package is optional and only needed for advanced graph visualization. On Windows you can skip installing `pygraphviz` to avoid requiring Microsoft C++ build tools.
 
 ```console
-conda create --name venv -c conda-forge "python>=3.18" graphviz pygraphviz r-base r-sdcMicro rpy2
+conda create --name venv -c conda-forge "python>=3.18" graphviz r-base r-sdcMicro rpy2
+# Optional: conda install pygraphviz
 ```
 
 on windows, pif execute some command in sh terminal so also do

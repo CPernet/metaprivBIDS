@@ -8,7 +8,7 @@ Installation
 ------------
 
 The metaprivBIDS software runs on multiple platforms (e.g. Linux, macOS, Windows) that have a Python 3.7 installation.
-It is recommended (but not required) to first create a virtual environment. This can be done with ``venv`` or, if pygraphviz fails (as it happens), with ``conda``.
+It is recommended (but not required) to first create a virtual environment. This can be done with ``venv`` or with ``conda``.
 
 .. code-block:: bash
 
@@ -20,7 +20,8 @@ or
 .. code-block:: bash
 
     conda config --add pkgs_dirs ~/conda_pkgs
-    conda create --name venv -c conda-forge "python>=3.7" graphviz pygraphviz r-base r-sdcMicro rpy2
+    conda create --name venv -c conda-forge "python>=3.7" graphviz r-base r-sdcMicro rpy2
+    # Optional: conda install pygraphviz
     conda activate venv
 
 You can then install metaprivBIDS by cloning the git repository.
