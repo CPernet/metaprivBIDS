@@ -9,14 +9,11 @@ import math
 from piflib.pif_calculator import compute_cigs
 
 
-import io 
+import io
 from rpy2 import robjects
 from rpy2.robjects.packages import importr
 from rpy2.robjects import pandas2ri
-
-
-# Activate pandas <-> R DataFrame conversion
-pandas2ri.activate()
+from rpy2.robjects.conversion import localconverter
 
 # Import the sdcMicro package
 sdcMicro = importr('sdcMicro')
@@ -337,10 +334,8 @@ class metaprivBIDS_core_logic:
         for col in df.select_dtypes(include=['object']).columns:
             df[col] = df[col].astype('category').cat.codes
 
-        # Convert to R DataFrame (missing values are passed unchanged)
-        r_df = robjects.DataFrame({
-            name: robjects.FloatVector(df[name]) for name in df.columns
-        })
+        with localconverter(robjects.default_converter + pandas2ri.converter):
+            r_df = robjects.conversion.py2rpy(df.astype(float))
 
         # Call the suda2 function
         suda_result = sdcMicro.suda2(
