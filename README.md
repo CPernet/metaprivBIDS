@@ -78,10 +78,10 @@ cd into the MetaprivBIDS folder
 ```console
 cd MetaprivBIDS
 ```
-and then run 
+and then run
 
 ```console
-pip install -e . 
+poetry install
 ```
 
 
@@ -106,7 +106,7 @@ To execute the program make sure all dependencies from pyproject.toml is availab
 This can be done by first ```cd``` into the MetaprivBIDS directory and then running
 
 ```console
-pip install -e . 
+poetry install
 ```
 
 # Usage
