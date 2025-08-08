@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools<81", "wheel"]
+requires = ["setuptools>=68", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -23,8 +23,7 @@ dependencies = [
     "networkx>=2.6.3",
     "numpy>=1.21.6",
     "piflib>=0.1.1",
-    "scipy>=1.7.3",
-    "setuptools>=42"
+    "scipy>=1.7.3"
 ]
 
 [project.scripts]
@@ -33,8 +32,8 @@ metaprivBIDS = 'metaprivBIDS.metaprivBIDS:main'
 [project.urls]
 repository = "https://github.com/cpernet/metaprivBIDS"
 
-[tool.setuptools]
-packages = ["metaprivBIDS", "metaprivBIDS.corelogic"]
+[tool.setuptools.packages.find]
+include = ["metaprivBIDS*"]
 
 [project.optional-dependencies]
 docs = [
