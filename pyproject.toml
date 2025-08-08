@@ -1,4 +1,5 @@
 [build-system]
+
 # Rely on whatever setuptools is available in the environment to avoid
 # failing when a specific version cannot be downloaded (e.g. on offline
 # systems).  Version 61 introduced the pyproject configuration we use so
