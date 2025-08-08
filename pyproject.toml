@@ -26,7 +26,8 @@ dependencies = [
     "networkx>=2.6.3",
     "numpy>=1.21.6",
     "piflib>=0.1.1",
-    "scipy>=1.7.3"
+    "scipy>=1.7.3",
+    "setuptools>=61"
 ]
 
 [project.scripts]

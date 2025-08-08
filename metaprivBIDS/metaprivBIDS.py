@@ -17,7 +17,14 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import networkx as nx
 from itertools import combinations
-import piflib.pif_calculator as pif
+try:
+    import piflib.pif_calculator as pif
+except ModuleNotFoundError as exc:
+    if exc.name == "pkg_resources":
+        raise ModuleNotFoundError(
+            "Required dependency 'pkg_resources' not found. Install 'setuptools' to provide it."
+        ) from exc
+    raise
 import seaborn as sns
 import matplotlib.colors as mcolors
 import io
