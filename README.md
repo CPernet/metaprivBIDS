@@ -54,6 +54,7 @@ Graphviz requires system-level dependencies as well as rpy2 and can be installed
 ```console
 conda create --name venv -c conda-forge "python>=3.7" graphviz r-base r-sdcMicro rpy2
 # Optional: conda install pygraphviz
+# (the provided install.py script will also prompt about this dependency)
 ```
 
 on windows, pif execute some command in sh terminal so also do
@@ -78,11 +79,14 @@ cd into the MetaprivBIDS folder
 ```console
 cd MetaprivBIDS
 ```
-and then run 
+and then run
 
 ```console
-pip install -e . 
+python install.py
 ```
+The script will ask whether to install the optional `pygraphviz` package.
+This script installs the package and prompts whether to include the optional
+`pygraphviz` dependency.
 
 
 ### Option 2 
@@ -106,8 +110,9 @@ To execute the program, make sure all dependencies from pyproject.toml are avail
 This can be done by first ```cd``` into the MetaprivBIDS directory and then running
 
 ```console
-pip install -e . 
+python install.py
 ```
+The script will ask whether to install the optional `pygraphviz` package.
 
 # Usage
 
