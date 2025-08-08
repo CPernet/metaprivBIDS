@@ -57,7 +57,7 @@ conda create --name venv -c conda-forge "python>=3.18" graphviz pygraphviz r-bas
 
 on windows, pif execute some command in sh terminal so also do
 ```console
-conda install -n venv sh   
+conda install m2-bash   
 ```
 
 Activates the environment. 
