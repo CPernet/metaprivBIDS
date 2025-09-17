@@ -43,7 +43,7 @@ The test suite validates:
 All tests must be run from the `/tests` directory with the appropriate environment:
 
 ```bash
-cd /path/to/metaprivBIDS/tests
+cd tests  # from the metaprivBIDS root directory
 # Activate your conda/virtual environment
 conda activate your-env-name  # or source your-venv/bin/activate
 ```
@@ -101,7 +101,7 @@ python -m pytest test_cli* -v     # Only CLI-related tests
 
 ### Immediate Verification
 ```bash
-cd /path/to/metaprivBIDS/tests
+cd tests  # from the metaprivBIDS root directory
 # Activate your environment first
 python demo_cli_usage.py
 ```
@@ -288,7 +288,7 @@ Tests are designed to be:
 For automated testing:
 ```bash
 #!/bin/bash
-cd /path/to/metaprivBIDS/tests
+cd tests  # from the metaprivBIDS root directory
 # Activate your environment: conda activate your-env-name
 python -m pytest . -v --tb=short
 ```

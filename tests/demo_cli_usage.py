@@ -4,7 +4,7 @@ Simple CLI demonstration of metaprivBIDS functionality using CSV data.
 This script shows how to use the core functionality without GUI dependencies.
 
 Usage:
-    cd /path/to/metaprivBIDS/tests
+    cd tests  # from the metaprivBIDS root directory
     # Activate your environment
     python demo_cli_usage.py
 """

@@ -8,7 +8,7 @@
 - **Setup**: Activate your environment before running tests
 
 ```bash
-cd /path/to/metaprivBIDS/tests
+cd tests  # from the metaprivBIDS root directory
 # Activate your environment
 conda activate your-env-name  # or source your-venv/bin/activate
 ```
@@ -18,7 +18,7 @@ conda activate your-env-name  # or source your-venv/bin/activate
 The package can be installed using the provided installer:
 
 ```bash
-cd /path/to/metaprivBIDS
+cd metaprivBIDS  # or wherever you cloned the repository
 python install.py
 ```
 

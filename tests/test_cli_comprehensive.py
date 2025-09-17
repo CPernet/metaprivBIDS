@@ -11,7 +11,7 @@ This test suite focuses on:
 - Error handling and edge cases
 
 Run from /tests folder:
-    cd /path/to/metaprivBIDS/tests
+    cd tests  # from the metaprivBIDS root directory
     # Activate your environment: conda activate your-env-name
     python test_cli_comprehensive.py
 """

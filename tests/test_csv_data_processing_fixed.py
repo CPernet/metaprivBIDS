@@ -11,7 +11,7 @@ This test suite validates:
 - Privacy risk assessment algorithms
 
 Run from /tests folder:
-    cd /path/to/metaprivBIDS/tests
+    cd tests  # from the metaprivBIDS root directory
     # Activate your environment: conda activate your-env-name
     python -m pytest test_csv_data_processing_fixed.py -v
 """
