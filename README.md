@@ -34,8 +34,6 @@ This Python build tool enables a given user to calculate a variety of different 
 Input can be in either CSV or TSV format.
 For meta information, an option to load a JSON file is available.
 
-# Software installation
-
 
 # Installation
 
