@@ -1,2 +1,2 @@
-- to execute any python code and build app, let do it inside a venv running the following command an any new terminal: conda activate /users/UserName/conda-envs/venv
+- to execute any python code and build app, let do it inside a venv running the following command an any new terminal: conda activate /users/cyrilpernet/conda-envs/venv
 - every test files must be run from the /tests folder

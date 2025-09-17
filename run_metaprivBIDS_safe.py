@@ -76,8 +76,10 @@ def test_qt_application():
     print("Testing Qt application creation...")
     try:
         with timeout(15):  # 15 second timeout
-            # Set minimal Qt platform
-            os.environ['QT_QPA_PLATFORM'] = 'minimal'
+            # Use the adaptive Qt setup instead of hardcoded platforms
+            from metaprivBIDS.metaprivBIDS import setup_qt_environment
+            setup_qt_environment()
+            
             from PySide6.QtWidgets import QApplication
             
             # Try to create a minimal application
@@ -135,15 +137,20 @@ def run_gui_mode():
     setup_qt_environment()
     suppress_warnings()
     
+    # Check if we have a display available
+    has_display = bool(os.environ.get('DISPLAY'))
+    
     try:
         with timeout(30):  # 30 second timeout for GUI startup
-            # Try minimal platform first
-            os.environ['QT_QPA_PLATFORM'] = 'minimal'
-            
+            # Qt environment is already set up by setup_qt_environment()
             print("Importing metaprivBIDS GUI...")
             from metaprivBIDS.metaprivBIDS import main as metapriv_main
             
             print("Starting GUI application...")
+            if has_display:
+                print("🖥️  GUI will be accessible via VNC on port 5900")
+                print("   To view the GUI, connect with: vncviewer localhost:5900")
+                print("   Or use any VNC client to connect to your server:5900")
             metapriv_main()
             
     except TimeoutError:

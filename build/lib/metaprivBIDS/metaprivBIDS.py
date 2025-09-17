@@ -1,10 +1,40 @@
 
+import os
+
+# Set up Qt environment - only use offscreen if no display is available
+def setup_qt_environment():
+    """Setup Qt environment based on display availability."""
+    # Check if we have a display available
+    has_display = bool(os.environ.get('DISPLAY'))
+    
+    # Check if we're in a testing environment
+    is_testing = 'pytest' in sys.modules or 'test' in sys.argv[0] if len(sys.argv) > 0 else False
+    
+    # Only force offscreen mode if no display is available or explicitly testing
+    if not has_display or is_testing:
+        os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
+        os.environ.setdefault("QT_OPENGL", "software")
+    else:
+        # For GUI mode with display, try VNC platform which works better in remote environments
+        # VNC platform is more compatible than xcb in many server/remote desktop environments
+        if not os.environ.get("QT_QPA_PLATFORM"):
+            os.environ["QT_QPA_PLATFORM"] = "vnc"
+            # Set VNC server options for better visibility
+            os.environ.setdefault("QT_QPA_VNC_SCREEN", "1024x768")
+            os.environ.setdefault("QT_QPA_VNC_PORT", "5900")
+            print("🖥️  GUI will be available via VNC on port 5900")
+            print("   To view the GUI, connect with: vncviewer localhost:5900")
+
+# We need to import sys first to check argv
+import sys
+setup_qt_environment()
+
 from PySide6.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout, QSpacerItem, QHBoxLayout,
                                QPushButton, QFileDialog, QMessageBox, QTreeView, QHeaderView, QLabel,
                                QFrame, QTableView, QStackedWidget, QComboBox, QInputDialog, QGridLayout, QSizePolicy,
                                QStyledItemDelegate, QMenu, QListWidget, QDialog, QTextBrowser,QScrollArea,QSplashScreen,QTableView, QScrollArea, QTableWidget, QTableWidgetItem) 
 
-from PySide6.QtGui import QStandardItemModel, QStandardItem, QFont, QAction, QPixmap,QColor, QIcon,QPainter, QColor, QPixmap,QBrush 
+from PySide6.QtGui import QStandardItemModel, QStandardItem, QFont, QAction, QPixmap,QColor, QIcon,QPainter, QColor, QPixmap,QBrush, QGuiApplication
 from PySide6.QtCore import Qt, QDir, QDateTime, QTimer,  QSize
 from PySide6.QtSvg import QSvgRenderer
 
@@ -89,24 +119,49 @@ class metaprivBIDS(QMainWindow):
           
 
     def show_splash_screen(self):
-        splash_pix = QPixmap("icons/hacker.png")  # Change to your splash image path
-        self.splash = QSplashScreen(splash_pix, Qt.WindowStaysOnTopHint)
-        self.splash.setMask(splash_pix.mask())
-        self.splash.setAutoFillBackground(True)
+        # Check if we're running in a headless environment or VNC
+        platform_name = QGuiApplication.platformName()
+        is_headless = platform_name in {"offscreen", "minimal", "vnc"}
+        
+        # Initialize splash as None
+        self.splash = None
+        
+        if is_headless:
+            # Skip splash screen in headless mode
+            QTimer.singleShot(100, self.close_splash)
+            return
+            
+        try:
+            splash_pix = QPixmap("icons/hacker.png")  # Change to your splash image path
+            if not splash_pix.isNull():
+                self.splash = QSplashScreen(splash_pix, Qt.WindowStaysOnTopHint)
+                
+                # Only set mask if not in headless mode (VNC doesn't support window masks)
+                if not is_headless:
+                    self.splash.setMask(splash_pix.mask())
+                    
+                self.splash.setAutoFillBackground(True)
 
-        # Center the splash screen relative to the main window
-        self.splash.move(self.x() + (self.width() - splash_pix.width()) // 2,
-                         self.y() + (self.height() - splash_pix.height()) // 2)
+                # Center the splash screen relative to the main window
+                self.splash.move(self.x() + (self.width() - splash_pix.width()) // 2,
+                                 self.y() + (self.height() - splash_pix.height()) // 2)
 
-        # Display the splash screen
-        self.splash.show()
+                # Display the splash screen
+                self.splash.show()
 
-        # Timer to close the splash screen and show the main window
-        QTimer.singleShot(2000, self.close_splash)
+                # Timer to close the splash screen and show the main window
+                QTimer.singleShot(2000, self.close_splash)
+            else:
+                # Image not found, skip splash
+                QTimer.singleShot(100, self.close_splash)
+        except Exception:
+            # Any error with splash screen, just skip it
+            QTimer.singleShot(100, self.close_splash)
 
 
     def close_splash(self):
-        self.splash.close()
+        if hasattr(self, 'splash') and self.splash is not None:
+            self.splash.close()
         self.show() 
      
     def initUI(self):
@@ -1273,7 +1328,7 @@ class metaprivBIDS(QMainWindow):
 
       
         self.metadata_output_label = QLabel("")
-        self.metadata_output_label.setStyleSheet("color: #FFFFFF; padding: 5px; 0.2px solid #FFFFFF; border: none;")  
+        self.metadata_output_label.setStyleSheet("color: #FFFFFF; padding: 5px; border: 0.2px solid #FFFFFF;")  
         empty_frame_layout.addWidget(self.metadata_output_label)  
 
        
@@ -2932,11 +2987,35 @@ class metaprivBIDS(QMainWindow):
 
 
 def main():
-   
-    app = QApplication(sys.argv)
-    window = metaprivBIDS()  # Assuming FileAnalyzer is your main window
+    # Check if we're running in a headless environment (including VNC)
+    platform = os.environ.get("QT_QPA_PLATFORM", "").lower()
+    is_headless = platform in {"offscreen", "minimal", "vnc"}
+    
+    app = QApplication.instance() or QApplication(sys.argv)
+    window = metaprivBIDS()
     window.show()
+    
+    if is_headless:
+        # In headless mode, quit after a short time to prevent hanging
+        print(f"Running in headless mode (platform: {platform})")
+        QTimer.singleShot(5000, app.quit)  # Give it a bit more time for VNC to show window
+    
     sys.exit(app.exec())
+
+
+def run_headless(main_window_factory=None):
+    """Run the app in headless mode for testing"""
+    if main_window_factory is None:
+        main_window_factory = metaprivBIDS
+        
+    app = QApplication.instance() or QApplication([])
+    win = main_window_factory()
+    win.show()  # ok in offscreen
+    # Quit quickly so tests don't hang:
+    QTimer.singleShot(200, app.quit)
+    app.exec()
+    # Optionally assert something about your widgets before returning
+    return win
 
 
 if __name__ == "__main__":

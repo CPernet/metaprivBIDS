@@ -1,0 +1,57 @@
+A) Make headless tests auto-quit
+
+Ensure your tests start the app, do a quick smoke check, and quit the event loop:
+
+import os
+os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
+os.environ.setdefault("QT_OPENGL", "software")  # avoids GL on headless
+
+from PyQt5.QtWidgets import QApplication
+from PyQt5.QtCore import QTimer
+
+def run_headless(main_window_factory):
+    app = QApplication.instance() or QApplication([])
+    win = main_window_factory()
+    win.show()  # ok in offscreen
+    # Quit quickly so tests don’t hang:
+    QTimer.singleShot(200, app.quit)
+    app.exec_()
+    # Optionally assert something about your widgets before returning
+
+
+B) Install: pip install pytest-qt (no root needed in a venv).
+With pytest-qt (recommended):
+
+def test_gui_smoke(qtbot):
+    win = MainWindow()
+    qtbot.addWidget(win)
+    win.show()
+    # interact/assert here …
+    # test ends without ever calling app.exec_(), so no hang
+
+C) Guard code that uses unsupported features in headless
+
+If your code calls things like setMask(), setWindowOpacity(), or relies on fancy size hints, skip them when headless:
+
+from PyQt5.QtGui import QGuiApplication
+is_offscreen = QGuiApplication.platformName() in {"offscreen", "minimal"}
+
+if not is_offscreen:
+    window.setMask(...)
+    window.setWindowOpacity(0.95)
+
+D) Clean up your stylesheets (quiet the QLabel parse errors)
+
+Qt supports a subset of CSS. Common culprits to remove/avoid:
+
+box-shadow, text-shadow, filter, backdrop-filter
+
+advanced calc() expressions
+
+CSS vars (var(--something))
+
+some line-height usages
+
+Stick to: color, background, border, border-radius, padding, margin, font-size, font-weight, gradients via qlineargradient.
+
+You can also scope styles: QLabel { font-weight: 600; } is fine.

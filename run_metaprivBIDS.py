@@ -110,32 +110,57 @@ def main():
     """Main launcher function."""
     print("Setting up metaprivBIDS environment...")
     
-    # Set up Qt environment
+    # Set up Qt environment (basic setup)
     setup_qt_environment()
     
     # Suppress known warnings
     suppress_warnings()
     
-    # Find a working Qt platform
-    print("Finding compatible Qt platform...")
-    working_platform = find_working_qt_platform()
-    
-    if working_platform:
-        print(f"Using Qt platform: {working_platform}")
-        os.environ['QT_QPA_PLATFORM'] = working_platform
+    print("Launching metaprivBIDS GUI...")
+    try:
+        # Use the comprehensive Qt setup from the main module (includes VNC support)
+        from metaprivBIDS.metaprivBIDS import setup_qt_environment as comprehensive_qt_setup
+        from metaprivBIDS.metaprivBIDS import main as metapriv_main
         
-        print("Launching metaprivBIDS GUI...")
-        try:
-            # Import and run metaprivBIDS main function
-            from metaprivBIDS.metaprivBIDS import main as metapriv_main
-            metapriv_main()
-        except Exception as e:
-            print(f"Error running GUI: {e}")
-            print("Try using the CLI mode instead.")
+        # Use the comprehensive setup that includes VNC and platform detection
+        comprehensive_qt_setup()
+        
+        # Check if display is available for VNC message
+        has_display = bool(os.environ.get('DISPLAY'))
+        qt_platform = os.environ.get('QT_QPA_PLATFORM', '').lower()
+        
+        if qt_platform == 'vnc':
+            vnc_port = os.environ.get("QT_QPA_VNC_PORT", "5900")
+            print(f"🖥️  GUI will be accessible via VNC on port {vnc_port}")
+            print(f"   To view the GUI, connect with: vncviewer localhost:{vnc_port}")
+            print(f"   Or use any VNC client to connect to your server:{vnc_port}")
+        elif has_display:
+            print("🖥️  GUI starting in display mode")
+        else:
+            print("🖥️  GUI starting in headless mode")
             
-    else:
-        print("Warning: No working Qt platform found. The GUI cannot start.")
-        print("This is likely due to missing system dependencies.")
+        metapriv_main()
+        
+    except Exception as e:
+        print(f"Error running GUI: {e}")
+        print("Trying fallback platform detection...")
+        
+        # Fallback to the old method if the comprehensive setup fails
+        working_platform = find_working_qt_platform()
+        
+        if working_platform:
+            print(f"Using fallback Qt platform: {working_platform}")
+            os.environ['QT_QPA_PLATFORM'] = working_platform
+            
+            try:
+                from metaprivBIDS.metaprivBIDS import main as metapriv_main
+                metapriv_main()
+            except Exception as e2:
+                print(f"Fallback also failed: {e2}")
+                print("Try using the CLI mode instead.")
+        else:
+            print("Warning: No working Qt platform found. The GUI cannot start.")
+            print("This is likely due to missing system dependencies.")
         
     # Offer CLI-only mode
     print("\n" + "="*60)
