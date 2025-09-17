@@ -41,6 +41,24 @@ For meta information, an option to load a JSON file is available.
 - Python 3.7+ (tested with Python 3.13)
 - Conda environment (recommended)
 
+### Windows Users - Additional Requirements
+**⚠️ Windows users must install R and Rtools before proceeding:**
+
+1. **Install R**: Download and install R from [CRAN](https://cran.r-project.org/bin/windows/base/)
+2. **Install Rtools**: Download and install Rtools from [CRAN Rtools](https://cran.r-project.org/bin/windows/Rtools/)
+   - Rtools provides the necessary build tools (make, gcc) required for compiling R packages
+   - Make sure to add Rtools to your system PATH during installation
+3. **Install required R packages**: Open R or RStudio and run:
+   ```r
+   install.packages("sdcMicro")
+   ```
+4. **Set R_HOME environment variable** (if needed):
+   ```cmd
+   set R_HOME=C:\Program Files\R\R-4.5.1
+   ```
+   
+**Why this is needed**: The metaprivBIDS package depends on `rpy2` which requires R and build tools to compile properly on Windows. Additionally, the `sdcMicro` R package is required for privacy analysis functionality. Without Rtools, you'll get "make: command not found" errors.
+
 ## Step 1: Setup Environment
 First, activate your conda environment:
 
@@ -205,6 +223,54 @@ python test_metaprivBIDS_core_logic.py
 
 ### 6. Permission Issues
 If you cannot install system packages (sudo access), the CLI mode will work without additional system dependencies.
+
+### 7. Windows R/Rtools Issues
+**Error**: `make: command not found` or `R was not built as a library`
+
+**Cause**: Missing R installation or Rtools build tools on Windows.
+
+**Solutions**:
+1. **Install R**: Download from [CRAN](https://cran.r-project.org/bin/windows/base/)
+2. **Install Rtools**: Download from [CRAN Rtools](https://cran.r-project.org/bin/windows/Rtools/)
+3. **Add Rtools to PATH**: During Rtools installation, check "Add to PATH"
+4. **Set R_HOME environment variable**:
+   ```cmd
+   set R_HOME=C:\Program Files\R\R-4.5.1
+   ```
+5. **Alternative: Use pre-compiled rpy2**:
+   ```bash
+   pip uninstall rpy2
+   pip install --only-binary=all rpy2
+   ```
+6. **Alternative: Use conda for rpy2**:
+   ```bash
+   conda install -c conda-forge rpy2
+   ```
+
+**Note**: If rpy2 is causing issues and isn't critical for your use case, you may be able to skip R-related functionality.
+
+### 8. Missing R Package "sdcMicro"
+**Error**: `The R package "sdcMicro" is not installed`
+
+**Cause**: Required R package for privacy analysis functionality is missing.
+
+**Solutions**:
+1. **Install via R console**:
+   ```r
+   install.packages("sdcMicro")
+   ```
+2. **Install via RStudio**: Open RStudio and run the same command
+3. **Install from R command line**:
+   ```bash
+   R -e "install.packages('sdcMicro')"
+   ```
+4. **If installation fails**, try installing dependencies first:
+   ```r
+   install.packages(c("VIM", "robustbase", "cluster"))
+   install.packages("sdcMicro")
+   ```
+
+**Note**: The sdcMicro package is essential for k-anonymity, l-diversity, and other privacy metrics. The application may not function properly without it.
 
 ## Support
 

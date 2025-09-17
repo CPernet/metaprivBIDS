@@ -3,6 +3,74 @@ import os
 import sys
 import subprocess
 import tempfile
+import urllib.request
+import zipfile
+
+def setup_fonts():
+    """Setup fonts for Qt application to avoid font-related errors."""
+    try:
+        from PySide6.QtGui import QFontDatabase
+        from PySide6.QtWidgets import QApplication
+        
+        # Make sure QApplication exists
+        app = QApplication.instance()
+        if app is None:
+            print("⚠️  QApplication not yet created, skipping font setup")
+            return
+        
+        # Check if we have any fonts available
+        font_db = QFontDatabase()
+        available_families = font_db.families()
+        
+        if not available_families:
+            print("⚠️  No system fonts detected, setting up basic fonts...")
+            
+            # Create a fonts directory in the package
+            package_dir = os.path.dirname(os.path.abspath(__file__))
+            fonts_dir = os.path.join(package_dir, 'fonts')
+            os.makedirs(fonts_dir, exist_ok=True)
+            
+            # Download and install DejaVu fonts if not available
+            dejavu_url = "https://github.com/dejavu-fonts/dejavu-fonts/releases/download/version_2_37/dejavu-fonts-ttf-2.37.zip"
+            fonts_zip = os.path.join(fonts_dir, 'dejavu-fonts.zip')
+            
+            try:
+                if not os.path.exists(fonts_zip):
+                    print("📥 Downloading DejaVu fonts...")
+                    urllib.request.urlretrieve(dejavu_url, fonts_zip)
+                
+                # Extract fonts
+                with zipfile.ZipFile(fonts_zip, 'r') as zip_ref:
+                    for file in zip_ref.namelist():
+                        if file.endswith('.ttf'):
+                            zip_ref.extract(file, fonts_dir)
+                            ttf_path = os.path.join(fonts_dir, file)
+                            font_id = font_db.addApplicationFont(ttf_path)
+                            if font_id != -1:
+                                families = font_db.applicationFontFamilies(font_id)
+                                print(f"✓ Loaded font: {families}")
+                
+                print("✓ Fonts setup completed")
+                
+            except Exception as e:
+                print(f"⚠️  Could not download fonts: {e}")
+                # Set Qt to use fontconfig as fallback
+                os.environ['QT_QPA_FONTDIR'] = ''  # Let Qt use system fontconfig
+                print("🔧 Using fontconfig fallback")
+        
+        else:
+            print(f"✓ Found {len(available_families)} system font families")
+            
+    except ImportError:
+        # If Qt is not available yet, set environment variables for font handling
+        print("🔧 Setting font environment variables...")
+        os.environ['QT_QPA_FONTDIR'] = ''  # Use fontconfig
+        os.environ['FONTCONFIG_FILE'] = '/etc/fonts/fonts.conf'
+        
+    except Exception as e:
+        print(f"⚠️  Font setup warning: {e}")
+        # Continue without fonts - Qt will handle gracefully
+        pass
 
 # Set up Qt environment - only use offscreen if no display is available
 def setup_qt_environment():
@@ -303,14 +371,7 @@ class metaprivBIDS(QMainWindow):
                     QPushButton {{
                         background-color: #94127e; 
                         color: white; 
-                        font-family: 'Roboto'; /* Set font family */
-                        font-weight: bold; 
-                        font-size: 14px;
-                        border-radius: 2px; 
-                        padding: 5px;
-                        min-height: 20px;
-
-                    }}
+                        font-family: "DejaVu Sans", "Liberation Sans", "Arial", "Helvetica", sans-serif; /* Fallback font families */}}
                     QPushButton:pressed {{
                         background-color: #808080; /* Change color when pressed */
                         border-radius: 8px; /* Optional: slightly decrease border radius */
@@ -367,13 +428,7 @@ class metaprivBIDS(QMainWindow):
                     QPushButton {{
                         background-color: {color}; 
                         color: white;  /* Change text color to red */
-                        font-family: 'Roboto'; /* Set font family */
-                        font-weight: bold; 
-                        font-size: 14px;
-                        border-radius: 2px; 
-                        padding: 5px;
-                        min-height: 20px;
-                    }}
+                        font-family: "DejaVu Sans", "Liberation Sans", "Arial", "Helvetica", sans-serif; /* Fallback font families */}}
                     QPushButton::icon {{
                         margin-right: 20px;  /* Adds space between the text and the icon */
                     }}
@@ -397,13 +452,7 @@ class metaprivBIDS(QMainWindow):
                     QPushButton {{
                         background-color: {color}; 
                         color: white; 
-                        font-family: 'Roboto'; /* Set font family */
-                        font-weight: bold; 
-                        font-size: 14px;
-                        border-radius: 2px; 
-                        padding: 5px;
-                        min-height: 20px;
-                    }}
+                        font-family: "DejaVu Sans", "Liberation Sans", "Arial", "Helvetica", sans-serif; /* Fallback font families */}}
                     QPushButton:pressed {{
                         background-color: #808080; /* Change color when pressed */
                         border-radius: 8px; /* Optional: slightly decrease border radius */
@@ -819,13 +868,7 @@ class metaprivBIDS(QMainWindow):
                     QPushButton {{
                         background-color: #94127e; 
                         color: white; 
-                        font-family: 'Roboto'; /* Set font family */
-                        font-weight: bold; 
-                        font-size: 14px;
-                        border-radius: 2px; 
-                        padding: 5px;
-                        min-height: 20px;
-                    }}
+                        font-family: "DejaVu Sans", "Liberation Sans", "Arial", "Helvetica", sans-serif; /* Fallback font families */}}
                     QPushButton:pressed {{
                         background-color: #808080; /* Change color when pressed */
                         border-radius: 8px; /* Optional: slightly decrease border radius */
@@ -851,13 +894,7 @@ class metaprivBIDS(QMainWindow):
                     QPushButton {{
                         background-color: #94127e; 
                         color: white; 
-                        font-family: 'Roboto'; /* Set font family */
-                        font-weight: bold; 
-                        font-size: 14px;
-                        border-radius: 2px; 
-                        padding: 5px;
-                        min-height: 20px;
-                    }}
+                        font-family: "DejaVu Sans", "Liberation Sans", "Arial", "Helvetica", sans-serif; /* Fallback font families */}}
                     QPushButton:pressed {{
                         background-color: #808080; /* Change color when pressed */
                         border-radius: 8px; /* Optional: slightly decrease border radius */
@@ -881,13 +918,7 @@ class metaprivBIDS(QMainWindow):
                         QPushButton {{
                             background-color: #94127e; 
                             color: white; 
-                            font-family: 'Roboto'; 
-                            font-weight: bold; 
-                            font-size: 14px;
-                            border-radius: 2px; 
-                            padding: 5px;
-                            min-height: 20px;
-                        }}
+                            font-family: "DejaVu Sans", "Liberation Sans", "Arial", "Helvetica", sans-serif; /* Fallback font families */}}
                         QPushButton:pressed {{
                             background-color: #808080; 
                             border-radius: 8px; 
@@ -1669,14 +1700,7 @@ class metaprivBIDS(QMainWindow):
                 QPushButton {{
                     background-color: {color}; 
                     color: white;  /* Change text color to white */
-                    font-family: 'Roboto'; /* Set font family */
-                    font-weight: bold; 
-                    font-size: 14px;
-                    border-radius: 1px; 
-                    padding: 5px;
-                    min-height: 20px;
-                    width: 180px;      /* Set a fixed width */
-                }}
+                    font-family: "DejaVu Sans", "Liberation Sans", "Arial", "Helvetica", sans-serif; /* Fallback font families */}}
                 QPushButton:pressed {{
                     background-color: #808080; /* Change color when pressed */
                     border-radius: 8px; /* Optional: slightly decrease border radius */
@@ -3069,6 +3093,10 @@ def main():
     is_headless = platform in {"offscreen", "minimal", "vnc"}
     
     app = QApplication.instance() or QApplication(sys.argv)
+    
+    # Setup fonts after QApplication is created
+    setup_fonts()
+    
     window = metaprivBIDS()
     window.show()
     
