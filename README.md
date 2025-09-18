@@ -2,6 +2,7 @@
 
 [![Documentation Status](https://readthedocs.org/projects/metaprivbids/badge/?version=latest)](https://metaprivbids.readthedocs.io/en/latest/?badge=latest)
 
+[![DOI](https://zenodo.org/badge/843369214.svg)](https://doi.org/10.5281/zenodo.17150814)
 
 
 
