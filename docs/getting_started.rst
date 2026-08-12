@@ -1,105 +1,64 @@
-Getting Started
+Getting started
 ===============
 
-Welcome to the Getting Started guide for metaprivBIDS.
-This Python build tool enables a user to calculate a variety of different data privacy metrics on tabular data from a user interface.  
+metaprivBIDS uses Conda for the compiled Python/R boundary and ``uv`` for the
+Python application dependencies. This keeps ``sdcMicro`` and ``rpy2`` on a
+known-compatible R runtime while retaining fast Python package installation.
 
 Installation
 ------------
 
-The metaprivBIDS software runs on multiple platforms (e.g. Linux, macOS, Windows) that have a Python 3.7 installation.
-It is recommended (but not required) to first create a virtual environment. This can be done with ``venv`` or with ``conda``.
+Install Miniforge or another Conda distribution, clone the repository, and
+run these commands from its root directory:
 
-.. code-block:: bash
+.. code-block:: console
 
-    python -m venv metapriv
-    source metapriv/bin/activate
+   conda env create -f environment.yml
+   conda activate metaprivbids
+   uv pip install -e ".[test]"
 
-or
+Verify both Python and the R bridge:
 
-.. code-block:: bash
+.. code-block:: console
 
-    conda config --add pkgs_dirs ~/conda_pkgs
-    conda create --name venv -c conda-forge "python>=3.7" graphviz r-base r-sdcMicro rpy2
-    # Optional: conda install pygraphviz
-    conda activate venv
+   python -m pytest -q
 
-You can then install metaprivBIDS by cloning the git repository.
+Local browser interface
+-----------------------
 
-.. code-block:: bash
+.. code-block:: console
 
-    git clone https://github.com/CPernet/metaprivBIDS.git
+   metaprivBIDS-gui
 
+The application opens at ``http://127.0.0.1:8080``. It is deliberately bound
+to the loopback interface, and uploaded data remains in the local process.
 
-To execute the program, make sure all dependencies from pyproject.toml are available in a Python 3.7 environment.
-This can be done by running
+Command line
+------------
 
-.. code-block:: bash
+``metaprivBIDS`` is the non-interactive entry point. For example:
 
-    cd metaprivBIDS
-    pip install -e . 
+.. code-block:: console
 
+   metaprivBIDS privacy Use_Case_Data/adult_mini.csv \
+     --columns age,education,occupation \
+     --sensitive salary-class
 
-Basic Usage
------------
+See :doc:`cli` for every command and :doc:`examples` for a short workflow.
 
-Once installed, you can call and execute the program globally from any directory using the terminal/command prompt. This means you don't need to navigate to the program's installation folder; you can run it from anywhere.
-
-.. code-block:: bash
-    
-    metaprivBIDS
-
-
-prompting the program to start.
-
-
-Command-Line Execution
-----------------------
- 
-After following the installation guide, the metrics within the MetaprivBIDS tool can be called through an import statement without making use of the GUI.   
-
-e.g. 
-
-.. code-block:: python 
-
-    from metaprivBIDS.metaprivBIDS.corelogic.metapriv_corelogic import metaprivBIDS_core_logic
-    metapriv = metaprivBIDS_core_logic()
-
-    # Load the data
-    data_info = metapriv.load_data('metaprivBIDS/Use_Case_Data/adult_mini.csv')
-
-    # Inspect {column, unique value count, column type}
-    data = data_info["data"]
-    print("Column Types:",'\n')
-    print(data_info["column_types"],'\n')
-
-    # Select Quasi-Identifiers
-    selected_columns = ["age", "education", "marital-status", "occupation", "relationship","sex","salary-class"]
-    results_k_global = metapriv.find_lowest_unique_columns(data, selected_columns)
-    print('Find Influential Columns:','\n')
-    print(results_k_global)
-
-    # Compute Personal Information Factor 
-    pif_value, cig_df = metapriv.compute_cig(data, selected_columns)
-    print("PIF Value:", pif_value)
-    print("CIG DataFrame:")
-    print(cig_df)
-
-
-    # Run SUDA2 computation
-    results_suda = metapriv.compute_suda2(data, selected_columns, sample_fraction=0.3, missing_value=-999)
-
-    # Access results
-    data_with_scores = results_suda["data_with_scores"]
-    attribute_contributions = results_suda["attribute_contributions"]
-    attribute_level_contributions = results_suda["attribute_level_contributions"]
-
-
-
-
-Next Steps
+Python API
 ----------
 
+.. code-block:: python
 
-- Explore the :ref:`Examples <examples_section>` to see an interactive tutorial on how to navigate the graphical user interface for MetaprivBIDS.
+   from metaprivBIDS.corelogic import calculate_privacy_metrics, load_tabular_data
 
+   data = load_tabular_data("Use_Case_Data/adult_mini.csv")
+   metrics = calculate_privacy_metrics(
+       data,
+       ["age", "education", "occupation"],
+       sensitive_attribute="salary-class",
+   )
+
+The functions are non-interactive, do not mutate their input dataframe, and
+are shared by the CLI and browser interface.

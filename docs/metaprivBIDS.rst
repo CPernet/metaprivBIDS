@@ -4,20 +4,22 @@ metaprivBIDS package
 Submodules
 ----------
 
-metaprivBIDS.metaprivBIDS module
+metaprivBIDS core functions
+---------------------------
+
+.. automodule:: metaprivBIDS.corelogic.functions
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+metaprivBIDS command line
+-------------------------
+
+.. automodule:: metaprivBIDS.cli
+   :members:
+
+metaprivBIDS browser application
 --------------------------------
 
-.. automodule:: metaprivBIDS.metaprivBIDS
+.. automodule:: metaprivBIDS.browser_app
    :members:
-   :undoc-members:
-   :show-inheritance:
-
-
-
-Module contents
----------------
-
-.. automodule:: metaprivBIDS
-   :members:
-   :undoc-members:
-   :show-inheritance:

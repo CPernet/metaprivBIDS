@@ -3,11 +3,11 @@
 # For the full list of built-in configuration values, see the documentation:
 # https://www.sphinx-doc.org/en/master/usage/configuration.html
 
-import os
 import sys
+from pathlib import Path
 
 # Insert sys.path modification and mock code here
-sys.path.insert(0, os.path.abspath('metaprivBIDS/metaprivBIDS/metaprivBIDS.py'))
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 # Mocking rpy2 to prevent build failures on Read the Docs
 from unittest.mock import MagicMock
@@ -26,18 +26,16 @@ sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
 project = 'metaprivBIDS'
 copyright = '2024, Emilie B. Kibsgaard'
 author = 'Emilie B. Kibsgaard'
-release = '1.1.0'
+release = '0.2.0'
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
-extensions = ['sphinx.ext.autodoc', 'sphinx.ext.mathjax']
+extensions = ['sphinx.ext.autodoc', 'sphinx.ext.mathjax', 'myst_parser']
 
-templates_path = ['_templates']
 exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 
 html_theme = 'sphinx_rtd_theme'
-html_static_path = ['_static']

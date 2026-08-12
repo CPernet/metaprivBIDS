@@ -1,7 +1,7 @@
 # Functionality inventory and browser GUI plan
 
-This inventory is the acceptance checklist for replacing the PySide6 GUI. The
-new interface must call `metaprivBIDS.corelogic`; privacy calculations and
+This inventory is the acceptance checklist for the browser GUI. The interface
+must call `metaprivBIDS.corelogic`; privacy calculations and
 transformations must not be reimplemented in event handlers.
 
 ## Data workspace
