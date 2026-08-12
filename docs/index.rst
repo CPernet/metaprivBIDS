@@ -43,6 +43,7 @@ License
 
    
    getting_started
+   cli
    modules  
    examples
 

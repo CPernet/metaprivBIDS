@@ -1,179 +1,94 @@
 # metaprivBIDS
 
-[![Documentation Status](https://readthedocs.org/projects/metaprivbids/badge/?version=latest)](https://metaprivbids.readthedocs.io/en/latest/?badge=latest)
+metaprivBIDS assesses and reduces disclosure risk in CSV and TSV data. It
+provides reusable Python functions, a complete command-line interface, and a
+local browser interface. SUDA2 is supplied by the established R package
+`sdcMicro`; all other operations run in Python.
 
-[![DOI](https://zenodo.org/badge/843369214.svg)](https://doi.org/10.5281/zenodo.17150814)
+## Reproducible installation
 
-
-
-This Python build tool enables a given user to calculate a variety of different data privacy metrics on tabular data from a user interface. 
-
-# Methods
-
-#### Assessing Privacy risk:
-
-- K-anonymity [^1]
-- ℓ-diversity [^2]
-- Sample Unique Detection Algorithm (SUDA) [^3]
-- Privacy Information Factor (PIF) [^4]
-
-[^1]: Sweeney, L. (2002). k-Anonymity: A Model for Protecting Privacy. *International Journal of Uncertainty, Fuzziness and Knowledge-Based Systems*, 10(05), 557-570.
-[^2]: Machanavajjhala, A., Kifer, D., Gehrke, J., & Venkitasubramaniam, M. (2007). ℓ-Diversity: Privacy Beyond k-Anonymity. *ACM Transactions on Knowledge Discovery from Data (TKDD)*, 1(1), 3-es.
-[^3]: Elliott, M. J., & Skinner, C. J. (2000). Identifying population uniques using limited information. *Proceedings of the Annual Meeting of the American Statistical Association*.
-[^4]: Information Governance ANZ. (2019). *Privacy Impact Assessment eReport.* [Link](https://www.infogovanz.com/wp-content/uploads/2020/01/191202-ACS-Privacy-eReport.pdf)
-
-
-#### Mitigating Privacy Risk
-
-- Noise addition
-- Field generalisation
-- Rounded Approximation 
-
-
-# Input data format
-
-Input can be in either CSV or TSV format.
-For meta information, an option to load a JSON file is available.
-
-# Software installation
-
-
-### Option 1
-The metaprivBIDS software runs on multiple platforms (e.g. Linux, macOS, Windows) that have a Python 3 installation.
-It is recommended (but not required) to first create a virtual environment.
-
-  
- In the event of permission issues for system dependent files, you might want to set the pkgs_dirs option in Conda's configuration to use a directory that is writable by you.
- 
-```console 
-conda config --add pkgs_dirs ~/conda_pkgs
-```
-Creates the environment. 
-
-Graphviz requires system-level dependencies as well as rpy2 and can be installed directly when building the virtual environment. The `pygraphviz` package is optional and only needed for advanced graph visualization. On Windows you can skip installing `pygraphviz` to avoid requiring Microsoft C++ build tools.
+Install Miniforge or another Conda distribution, then run:
 
 ```console
-conda create --name venv -c conda-forge "python>=3.7" graphviz r-base r-sdcMicro rpy2
-# Optional: conda install pygraphviz
-# (the provided install.py script will also prompt about this dependency)
+conda env create -f environment.yml
+conda activate metaprivbids
+uv pip install -e ".[test]"
 ```
 
-on windows, pif execute some command in sh terminal so also do
-```console
-conda install m2-bash   
-```
+Conda owns the compiled runtime boundary: Python 3.12, R 4.4, `sdcMicro`,
+`rpy2`, and the Windows R shell tools. `uv` installs the editable Python
+package, browser GUI, and test dependencies into that same active environment.
+Do not run `uv sync` against this environment because it may remove packages
+managed by Conda.
 
-Activates the environment. 
-
-```console
-conda activate venv 
-```
-
-You can then install metaprivBIDS by first cloning the git repository.
+Verify the installation:
 
 ```console
-git clone https://github.com/CPernet/metaprivBIDS.git
+python -m pytest -q
+metaprivBIDS --help
 ```
 
-cd into the MetaprivBIDS folder  
+## Command line
+
+Every analysis and transformation can run without a GUI:
 
 ```console
-cd MetaprivBIDS
-```
-and then run
-
-```console
-python install.py
-```
-The script will ask whether to install the optional `pygraphviz` package.
-This script installs the package and prompts whether to include the optional
-`pygraphviz` dependency.
-
-
-### Option 2 
-
-
-```console 
-python -m venv venv
-source venv/bin/activate
+metaprivBIDS inspect Use_Case_Data/adult_mini.csv
+metaprivBIDS privacy Use_Case_Data/adult_mini.csv \
+  --columns age,education,marital-status,occupation,relationship,sex \
+  --sensitive salary-class
+metaprivBIDS k-global Use_Case_Data/adult_mini.csv \
+  --columns age,education,marital-status,occupation --output k_global.csv
+metaprivBIDS round input.csv --column age --exponent 1 --output rounded.csv
+metaprivBIDS noise input.csv --column age --distribution laplacian \
+  --scale 2 --seed 42 --output noisy.csv
+metaprivBIDS combine input.csv --column occupation \
+  --values Sales,Service --replacement Customer-facing --output generalized.csv
+metaprivBIDS cig input.csv --columns age,education,occupation --output cig.csv
+metaprivBIDS suda input.csv --columns age,education,occupation --output suda.csv
 ```
 
-You can then install metaprivBIDS by cloning the git repository.
+Additional commands include `k-combined`, `remove-decimals`, and `metadata`.
+Run `metaprivBIDS COMMAND --help` for all parameters and result export options.
 
-```console
-git clone https://github.com/CPernet/metaprivBIDS.git
-```
+## Python API
 
-
-# Dependencies
-
-To execute the program, make sure all dependencies from pyproject.toml are available in a Python 3.7 environment as stated in the software installation.
-This can be done by first ```cd``` into the MetaprivBIDS directory and then running
-
-```console
-python install.py
-```
-The script will ask whether to install the optional `pygraphviz` package.
-
-# Usage
-
-To execute the program run from command line 
-
-```console
-metaprivBIDS
-```
-
-prompting the program to start.
-
-
-# Command-Line Execution
-After following the installation guide, the metrics within the MetaprivBIDS tool can be called through an import statement without making use of the GUI.   
-
-e.g. 
+The GUI and CLI call the same non-interactive functions:
 
 ```python
-from metaprivBIDS.metaprivBIDS.corelogic.metapriv_corelogic import metaprivBIDS_core_logic
-metapriv = metaprivBIDS_core_logic()
+from metaprivBIDS.corelogic import calculate_privacy_metrics, load_tabular_data
 
-# Load the data
-data_info = metapriv.load_data('metaprivBIDS/Use_Case_Data/adult_mini.csv')
-
-# Inspect {column, unique value count, column type}
-data = data_info["data"]
-print("Column Types:",'\n')
-print(data_info["column_types"],'\n')
-
-# Select Quasi-Identifiers
-selected_columns = ["age", "education", "marital-status", "occupation", "relationship","sex","salary-class"]
-results_k_global = metapriv.find_lowest_unique_columns(data, selected_columns)
-print('Find Influential Columns:','\n')
-print(results_k_global)
-
-# Compute Personal Information Factor 
-pif_value, cig_df = metapriv.compute_cig(data, selected_columns)
-print("PIF Value:", pif_value)
-print("CIG DataFrame:")
-print(cig_df)
-
-
-# Run SUDA2 computation
-results_suda = metapriv.compute_suda2(data, selected_columns, sample_fraction=0.3, missing_value=-999)
-
-# Access results
-data_with_scores = results_suda["data_with_scores"]
-attribute_contributions = results_suda["attribute_contributions"]
-attribute_level_contributions = results_suda["attribute_level_contributions"]
+data = load_tabular_data("Use_Case_Data/adult_mini.csv")
+metrics = calculate_privacy_metrics(
+    data,
+    ["age", "education", "occupation"],
+    sensitive_attribute="salary-class",
+)
+print(metrics)
 ```
 
+Functions never display dialogs or mutate the input dataframe. Transformations
+return a new dataframe, which makes them suitable for scripts and tests.
 
+## Browser interface
 
+After installation, start the local application with:
 
-## Related tools
+```console
+metaprivBIDS-gui
+```
 
+The server binds to `127.0.0.1`; uploaded data and results remain on the local
+machine. See [docs/functionality.md](docs/functionality.md) for the feature
+inventory and implementation sequence.
 
+## Methods
 
+- k-anonymity and l-diversity
+- K-global and K-combined variable contribution
+- SUDA2 through `sdcMicro`
+- cell/row information gain and Personal Information Factor (PIF)
+- rounding, decimal removal, categorical generalisation, and Laplacian or
+  Gaussian noise
 
-
-
-
-
+metaprivBIDS is licensed under the MIT License.

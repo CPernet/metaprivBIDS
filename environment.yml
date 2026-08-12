@@ -1,0 +1,13 @@
+name: metaprivbids
+
+channels:
+  - conda-forge
+
+dependencies:
+  - python=3.12
+  - r-base=4.4
+  - r-sdcmicro=5.8.2
+  - rpy2=3.6.4
+  - m2-bash  # [win]
+  - m2-make  # [win]
+  - uv
