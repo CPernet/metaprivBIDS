@@ -170,7 +170,7 @@ class BrowserWorkspace:
                 raise ValueError("Choose a CSV or TSV file.")
             payload = await event.file.read()
             separator = "\t" if suffix == ".tsv" else ","
-            data = pd.read_csv(BytesIO(payload), sep=separator)
+            data = pd.read_csv(BytesIO(payload), sep=separator, skipinitialspace=True)
             data.columns = data.columns.astype(str).str.strip()
             if data.columns.duplicated().any():
                 raise ValueError("Column names must be unique after trimming whitespace.")

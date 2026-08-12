@@ -51,6 +51,13 @@ def test_load_and_profile(tmp_path, data):
     assert profile.set_index("column").loc["age", "type"] == "Continuous"
 
 
+def test_load_skips_spaces_after_delimiters(tmp_path):
+    path = tmp_path / "spaced.csv"
+    path.write_text("age, category\n20, Alpha\n30, Beta\n", encoding="utf-8")
+    loaded = load_tabular_data(path)
+    assert loaded["category"].tolist() == ["Alpha", "Beta"]
+
+
 def test_privacy_metrics_and_l_diversity(data):
     result = calculate_privacy_metrics(data, ["age", "city"], "diagnosis")
     assert result == {

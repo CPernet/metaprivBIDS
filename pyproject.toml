@@ -43,6 +43,10 @@ docs = [
     "myst-parser>=0.13"  # If using Markdown with Sphinx
 ]
 
+notebook = [
+    "jupyterlab>=4.0,<5",
+]
+
 # Test dependencies
 test = [
     "pytest>=8.0",

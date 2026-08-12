@@ -59,7 +59,7 @@ def load_tabular_data(file_path: str | Path) -> pd.DataFrame:
     if path.suffix.lower() not in {".csv", ".tsv"}:
         raise ValueError("Input must be a CSV or TSV file.")
     separator = "\t" if path.suffix.lower() == ".tsv" else ","
-    data = pd.read_csv(path, sep=separator)
+    data = pd.read_csv(path, sep=separator, skipinitialspace=True)
     if data.empty and len(data.columns) == 0:
         raise ValueError("The input file contains no tabular data.")
     data.columns = data.columns.astype(str).str.strip()

@@ -51,6 +51,14 @@ metaprivBIDS suda input.csv --columns age,education,occupation --output suda.csv
 Additional commands include `k-combined`, `remove-decimals`, and `metadata`.
 Run `metaprivBIDS COMMAND --help` for all parameters and result export options.
 
+For an executable end-to-end walkthrough, install the notebook tools and open
+`MetaprivBIDS_CoreLogic_Tutorial.ipynb` from the repository root:
+
+```console
+uv pip install -e ".[notebook]"
+jupyter lab MetaprivBIDS_CoreLogic_Tutorial.ipynb
+```
+
 ## Python API
 
 The GUI and CLI call the same non-interactive functions:
