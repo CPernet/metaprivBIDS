@@ -8,6 +8,6 @@ dependencies:
   - r-base=4.4
   - r-sdcmicro=5.8.2
   - rpy2=3.6.4
-  - m2-bash  # [win]
-  - m2-make  # [win]
+  - sel(win): m2-bash
+  - sel(win): m2-make
   - uv
