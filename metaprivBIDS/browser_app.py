@@ -12,7 +12,7 @@ from typing import Any, Callable
 import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
-from nicegui import events, run, ui
+from nicegui import context, events, run, ui
 
 from .corelogic import (
     CigResult,
@@ -62,12 +62,18 @@ class WorkspaceState:
     data: pd.DataFrame | None = None
     original: pd.DataFrame | None = None
     metadata: dict[str, Any] = field(default_factory=dict)
+    column_roles: dict[str, str] = field(default_factory=dict)
     history: dict[str, list[tuple[list[Any], Any]]] = field(default_factory=dict)
     privacy_result: dict[str, Any] | None = None
     k_global_result: pd.DataFrame | None = None
     k_combined_result: pd.DataFrame | None = None
     cig_result: CigResult | None = None
     suda_result: SudaResult | None = None
+
+    def __post_init__(self) -> None:
+        if self.data is not None and not self.column_roles:
+            profile = profile_columns(self.data)
+            self.column_roles = dict(zip(profile["column"], profile["type"]))
 
     @property
     def loaded(self) -> bool:
@@ -79,15 +85,17 @@ class WorkspaceState:
 
     @property
     def numeric_columns(self) -> list[str]:
-        if self.data is None:
-            return []
-        return list(self.data.select_dtypes(include=np.number).columns)
+        return [
+            column for column in self.columns
+            if self.column_roles.get(column) == "Continuous"
+        ]
 
     @property
     def categorical_columns(self) -> list[str]:
-        if self.data is None:
-            return []
-        return [column for column in self.columns if column not in self.numeric_columns]
+        return [
+            column for column in self.columns
+            if self.column_roles.get(column) == "Categorical"
+        ]
 
 
 def _records(frame: pd.DataFrame, limit: int | None = None) -> list[dict[str, Any]]:
@@ -163,6 +171,17 @@ class BrowserWorkspace:
         self.pif_panel.refresh()
         self.suda_panel.refresh()
 
+    def set_column_role(self, column: str, role: str) -> None:
+        if column not in self.state.columns:
+            self._notify_error(ValueError(f"Column '{column}' is not available."))
+            return
+        if role not in {"Categorical", "Continuous"}:
+            self._notify_error(ValueError(f"Unknown column role: {role}"))
+            return
+        self.state.column_roles[column] = role
+        self.transform_panel.refresh()
+        ui.notify(f"{column} is now treated as {role.lower()}.", type="positive")
+
     async def load_dataset(self, event: events.UploadEventArguments) -> None:
         try:
             suffix = Path(event.file.name).suffix.lower()
@@ -197,7 +216,7 @@ class BrowserWorkspace:
 
     @ui.refreshable
     def data_panel(self) -> None:
-        with self.data_tab:
+        with context.slot:
             with ui.card().classes("mp-panel w-full p-5"):
                 _section("Data workspace", "Load and inspect a local CSV or TSV dataset.")
                 with ui.row().classes("w-full items-start gap-5"):
@@ -215,11 +234,19 @@ class BrowserWorkspace:
             if not self.state.loaded:
                 with ui.card().classes("mp-panel w-full p-8 items-center"):
                     ui.icon("dataset", size="48px").classes("text-teal-700")
-                    ui.label("No dataset loaded").classes("text-lg font-medium")
-                    ui.label("Data stays in this local browser session.").classes("mp-muted")
+                    ui.label("No data loaded").classes("text-lg font-medium")
+                    ui.label("Choose a local CSV or TSV file to begin.").classes("mp-muted")
                 return
 
             data = self._require_data()
+            with ui.card().classes("mp-panel w-full p-4 bg-teal-50"):
+                with ui.row().classes("items-center gap-3"):
+                    ui.icon("lock", size="24px").classes("text-teal-800")
+                    with ui.column().classes("gap-0"):
+                        ui.label("Data loaded locally").classes("font-semibold text-teal-900")
+                        ui.label(
+                            "No data is sent to the web; this working copy stays in the local process."
+                        ).classes("text-sm text-teal-800")
             with ui.row().classes("w-full gap-4"):
                 _metric("Rows", f"{len(data):,}")
                 _metric("Columns", len(data.columns))
@@ -237,8 +264,33 @@ class BrowserWorkspace:
                 _data_table(data)
 
             with ui.card().classes("mp-panel w-full p-5"):
-                _section("Column profile", "Distinct values, inferred role, storage type, and missingness.")
-                _data_table(profile_columns(data), limit=None)
+                _section(
+                    "Column profile",
+                    "Review the heuristic role and change it when domain knowledge says otherwise.",
+                )
+                profile = profile_columns(data)
+                with ui.grid(columns=5).classes("w-full items-center gap-x-5 gap-y-2"):
+                    headings = [
+                        "Column", "Distinct", "Storage type", "Missing", "Analysis role"
+                    ]
+                    for heading in headings:
+                        ui.label(heading).classes(
+                            "text-xs uppercase tracking-wide font-semibold mp-muted"
+                        )
+                    for row in profile.itertuples(index=False):
+                        ui.label(row.column).classes("font-medium")
+                        ui.label(str(row.unique_count))
+                        ui.label(row.dtype)
+                        ui.label(str(row.missing_count))
+                        role = ui.select(
+                            ["Categorical", "Continuous"],
+                            value=self.state.column_roles[row.column],
+                        ).props("dense outlined").classes("w-full")
+                        role.on_value_change(
+                            lambda event, column=row.column: self.set_column_role(
+                                column, event.value
+                            )
+                        )
 
             with ui.card().classes("mp-panel w-full p-5"):
                 _section("Metadata", "Inspect the JSON entry associated with a dataset column.")
@@ -278,7 +330,7 @@ class BrowserWorkspace:
 
     @ui.refreshable
     def risk_panel(self) -> None:
-        with self.risk_tab:
+        with context.slot:
             with ui.card().classes("mp-panel w-full p-5"):
                 _section("Privacy summary", "Select quasi-identifiers and an optional sensitive attribute.")
                 qi = ui.select(
@@ -291,11 +343,13 @@ class BrowserWorkspace:
                     label="Sensitive attribute (optional)",
                     clearable=True,
                 ).classes("w-full")
-                ui.button(
+                privacy_button = ui.button(
                     "Calculate privacy metrics",
                     icon="shield",
                     on_click=lambda: self._run_privacy(qi.value or [], sensitive.value),
-                ).props("unelevated color=teal-8").bind_enabled_from(self.state, "loaded")
+                ).props("unelevated color=teal-8")
+                if not self.state.loaded:
+                    privacy_button.disable()
 
                 if self.state.privacy_result:
                     with ui.row().classes("w-full gap-3 mt-4"):
@@ -369,7 +423,7 @@ class BrowserWorkspace:
 
     @ui.refreshable
     def transform_panel(self) -> None:
-        with self.transform_tab:
+        with context.slot:
             with ui.card().classes("mp-panel w-full p-5"):
                 _section("Numeric transformations", "Apply one reversible operation to the working copy.")
                 numeric = ui.select(self.state.numeric_columns, label="Numeric column").classes("w-full")
@@ -522,7 +576,7 @@ class BrowserWorkspace:
 
     @ui.refreshable
     def pif_panel(self) -> None:
-        with self.pif_tab:
+        with context.slot:
             with ui.card().classes("mp-panel w-full p-5"):
                 _section("PIF and information gain", "Compute cell (CIG), row (RIG), and percentile risk.")
                 selected = ui.select(
@@ -610,7 +664,7 @@ class BrowserWorkspace:
 
     @ui.refreshable
     def suda_panel(self) -> None:
-        with self.suda_tab:
+        with context.slot:
             with ui.card().classes("mp-panel w-full p-5"):
                 _section("SUDA2", "Identify risky records and attribute contributions with sdcMicro.")
                 selected = ui.select(
@@ -694,17 +748,22 @@ def create_page(state: WorkspaceState | None = None) -> BrowserWorkspace:
         workspace.state = state
     with ui.column().classes("mp-shell w-full gap-5 py-6"):
         with ui.tabs().classes("w-full bg-white rounded-xl shadow-sm") as tabs:
-            workspace.data_tab = ui.tab("Data", icon="dataset")
-            workspace.risk_tab = ui.tab("Risk", icon="shield")
-            workspace.transform_tab = ui.tab("Transform", icon="tune")
-            workspace.pif_tab = ui.tab("PIF", icon="analytics")
-            workspace.suda_tab = ui.tab("SUDA2", icon="fingerprint")
-        with ui.tab_panels(tabs, value=workspace.data_tab).classes("w-full bg-transparent p-0"):
-            workspace.data_panel()
-            workspace.risk_panel()
-            workspace.transform_panel()
-            workspace.pif_panel()
-            workspace.suda_panel()
+            data_tab = ui.tab("Data", icon="dataset")
+            risk_tab = ui.tab("Risk", icon="shield")
+            transform_tab = ui.tab("Transform", icon="tune")
+            pif_tab = ui.tab("PIF", icon="analytics")
+            suda_tab = ui.tab("SUDA2", icon="fingerprint")
+        with ui.tab_panels(tabs, value=data_tab).classes("w-full bg-transparent p-0"):
+            with ui.tab_panel(data_tab).classes("p-0") as workspace.data_tab:
+                workspace.data_panel()
+            with ui.tab_panel(risk_tab).classes("p-0") as workspace.risk_tab:
+                workspace.risk_panel()
+            with ui.tab_panel(transform_tab).classes("p-0") as workspace.transform_tab:
+                workspace.transform_panel()
+            with ui.tab_panel(pif_tab).classes("p-0") as workspace.pif_tab:
+                workspace.pif_panel()
+            with ui.tab_panel(suda_tab).classes("p-0") as workspace.suda_tab:
+                workspace.suda_panel()
     return workspace
 
 
