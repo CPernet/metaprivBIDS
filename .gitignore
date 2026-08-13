@@ -3,5 +3,6 @@
 .pytest_cache/
 .ipynb_checkpoints/
 docs/_build/
+.docs-build-check/
 metaprivBIDS.egg-info/
 __pycache__/
