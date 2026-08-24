@@ -7,7 +7,9 @@ from typing import Any, Sequence
 import pandas as pd
 
 from .functions import (
+    PseudonymizationResult,
     add_noise,
+    bin_numeric_values,
     calculate_k_anonymity,
     calculate_k_combined,
     calculate_k_global,
@@ -19,6 +21,7 @@ from .functions import (
     compute_suda2,
     load_tabular_data,
     profile_columns,
+    pseudonymize_identifiers,
     revert_column,
     round_values,
     summarize_cig,
@@ -108,6 +111,24 @@ class metaprivBIDS_core_logic:
     ) -> pd.DataFrame:
         self.original_columns.setdefault(column_name, data[column_name].copy())
         return round_values(data, column_name, precision, mode=mode)
+
+    def pseudonymize_identifiers(
+        self,
+        data: pd.DataFrame,
+        identifier_column: str,
+    ) -> PseudonymizationResult:
+        return pseudonymize_identifiers(data, identifier_column)
+
+    def bin_numeric_values(
+        self,
+        data: pd.DataFrame,
+        column_name: str,
+        *,
+        bins: int | None = None,
+        width: float | None = None,
+    ) -> pd.DataFrame:
+        self.original_columns.setdefault(column_name, data[column_name].copy())
+        return bin_numeric_values(data, column_name, bins=bins, width=width)
 
     def revert_to_original(self, data: pd.DataFrame, column_name: str) -> pd.DataFrame:
         if column_name not in self.original_columns:

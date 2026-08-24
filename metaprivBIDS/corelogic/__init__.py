@@ -2,10 +2,12 @@
 
 from .functions import (
     CigResult,
+    PseudonymizationResult,
     SudaResult,
     add_gaussian_noise,
     add_laplacian_noise,
     add_noise,
+    bin_numeric_values,
     calculate_k_anonymity,
     calculate_k_combined,
     calculate_k_global,
@@ -18,6 +20,7 @@ from .functions import (
     load_json_metadata,
     load_tabular_data,
     profile_columns,
+    pseudonymize_identifiers,
     remove_decimals,
     revert_column,
     round_values,
@@ -27,10 +30,12 @@ from .metapriv_corelogic import metaprivBIDS_core_logic
 
 __all__ = [
     "CigResult",
+    "PseudonymizationResult",
     "SudaResult",
     "add_gaussian_noise",
     "add_laplacian_noise",
     "add_noise",
+    "bin_numeric_values",
     "calculate_k_anonymity",
     "calculate_k_combined",
     "calculate_k_global",
@@ -44,6 +49,7 @@ __all__ = [
     "load_tabular_data",
     "metaprivBIDS_core_logic",
     "profile_columns",
+    "pseudonymize_identifiers",
     "remove_decimals",
     "revert_column",
     "round_values",

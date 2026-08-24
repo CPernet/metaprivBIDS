@@ -1,201 +1,201 @@
-age, education, marital-status, occupation, relationship, sex, salary-class,disease,exercise_weekly_hours
-39, Bachelors, Never-married, Adm-clerical, Not-in-family, Male, <=50K,Hypertension,2
-50, Bachelors, Married-civ-spouse, Exec-managerial, Husband, Male, <=50K,Asthma,0
-38, HS-grad, Divorced, Handlers-cleaners, Not-in-family, Male, <=50K,Diabetes,6
-53, 11th, Married-civ-spouse, Handlers-cleaners, Husband, Male, <=50K,Diabetes,10
-28, Bachelors, Married-civ-spouse, Prof-specialty, Wife, Female, <=50K,Cancer,2
-37, Masters, Married-civ-spouse, Exec-managerial, Wife, Female, <=50K,Heart Disease,8
-49, 9th, Married-spouse-absent, Other-service, Not-in-family, Female, <=50K,Cancer,8
-52, HS-grad, Married-civ-spouse, Exec-managerial, Husband, Male, >50K,Cancer,0
-31, Masters, Never-married, Prof-specialty, Not-in-family, Female, >50K,Asthma,4
-42, Bachelors, Married-civ-spouse, Exec-managerial, Husband, Male, >50K,Heart Disease,4
-37, Some-college, Married-civ-spouse, Exec-managerial, Husband, Male, >50K,Hypertension,8
-30, Bachelors, Married-civ-spouse, Prof-specialty, Husband, Male, >50K,Cancer,10
-23, Bachelors, Never-married, Adm-clerical, Own-child, Female, <=50K,Hypertension,2
-32, Assoc-acdm, Never-married, Sales, Not-in-family, Male, <=50K,Cancer,10
-40, Assoc-voc, Married-civ-spouse, Craft-repair, Husband, Male, >50K,Diabetes,6
-34, 7th-8th, Married-civ-spouse, Transport-moving, Husband, Male, <=50K,Asthma,6
-25, HS-grad, Never-married, Farming-fishing, Own-child, Male, <=50K,Heart Disease,10
-32, HS-grad, Never-married, Machine-op-inspct, Unmarried, Male, <=50K,Hypertension,2
-38, 11th, Married-civ-spouse, Sales, Husband, Male, <=50K,Heart Disease,4
-43, Masters, Divorced, Exec-managerial, Unmarried, Female, >50K,Hypertension,2
-40, Doctorate, Married-civ-spouse, Prof-specialty, Husband, Male, >50K,Hypertension,2
-54, HS-grad, Separated, Other-service, Unmarried, Female, <=50K,Diabetes,4
-35, 9th, Married-civ-spouse, Farming-fishing, Husband, Male, <=50K,Heart Disease,0
-43, 11th, Married-civ-spouse, Transport-moving, Husband, Male, <=50K,Diabetes,8
-59, HS-grad, Divorced, Tech-support, Unmarried, Female, <=50K,Asthma,6
-56, Bachelors, Married-civ-spouse, Tech-support, Husband, Male, >50K,Asthma,6
-19, HS-grad, Never-married, Craft-repair, Own-child, Male, <=50K,Diabetes,8
-54, Some-college, Married-civ-spouse,, Husband, Male, >50K,Cancer,0
-39, HS-grad, Divorced, Exec-managerial, Not-in-family, Male, <=50K,Diabetes,10
-49, HS-grad, Married-civ-spouse, Craft-repair, Husband, Male, <=50K,Heart Disease,4
-23, Assoc-acdm, Never-married, Protective-serv, Not-in-family, Male, <=50K,Cancer,10
-20, Some-college, Never-married, Sales, Own-child, Male, <=50K,Hypertension,6
-45, Bachelors, Divorced, Exec-managerial, Own-child, Male, <=50K,Asthma,0
-30, Some-college, Married-civ-spouse, Adm-clerical, Own-child, Male, <=50K,Diabetes,4
-22, Some-college, Married-civ-spouse, Other-service, Husband, Male, <=50K,Hypertension,6
-48, 11th, Never-married, Machine-op-inspct, Unmarried, Male, <=50K,Heart Disease,10
-21, Some-college, Never-married, Machine-op-inspct, Own-child, Male, <=50K,Diabetes,8
-19, HS-grad, Married-AF-spouse, Adm-clerical, Wife, Female, <=50K,Heart Disease,2
-31, Some-college, Married-civ-spouse, Sales, Husband, Male, >50K,Cancer,6
-48, Assoc-acdm, Married-civ-spouse, Prof-specialty, Husband, Male, <=50K,Heart Disease,2
-31, 9th, Married-civ-spouse, Machine-op-inspct, Husband, Male, <=50K,Asthma,6
-53, Bachelors, Married-civ-spouse, Prof-specialty, Husband, Male, <=50K,Hypertension,0
-24, Bachelors, Married-civ-spouse, Tech-support, Husband, Male, <=50K,Cancer,6
-49, HS-grad, Separated, Adm-clerical, Unmarried, Female, <=50K,Heart Disease,6
-25, HS-grad, Never-married, Handlers-cleaners, Not-in-family, Male, <=50K,Asthma,8
-57, Bachelors, Married-civ-spouse, Prof-specialty, Husband, Male, >50K,Diabetes,8
-53, HS-grad, Married-civ-spouse, Machine-op-inspct, Husband, Male, <=50K,Hypertension,6
-44, Masters, Divorced, Exec-managerial, Unmarried, Female, <=50K,Diabetes,4
-41, Assoc-voc, Married-civ-spouse, Craft-repair, Husband, Male, <=50K,Cancer,0
-29, Assoc-voc, Never-married, Prof-specialty, Not-in-family, Male, <=50K,Hypertension,10
-25, Some-college, Married-civ-spouse, Exec-managerial, Wife, Female, <=50K,Hypertension,10
-18, HS-grad, Never-married, Other-service, Own-child, Female, <=50K,Diabetes,0
-47, Prof-school, Married-civ-spouse, Prof-specialty, Wife, Female, >50K,Asthma,8
-50, Bachelors, Divorced, Exec-managerial, Not-in-family, Male, >50K,Hypertension,10
-47, HS-grad, Divorced, Exec-managerial, Not-in-family, Male, <=50K,Hypertension,8
-43, Some-college, Married-civ-spouse, Tech-support, Husband, Male, >50K,Hypertension,10
-46, 5th-6th, Married-civ-spouse, Machine-op-inspct, Husband, Male, <=50K,Heart Disease,10
-35, Assoc-voc, Married-civ-spouse, Other-service, Husband, Male, <=50K,Asthma,2
-41, HS-grad, Married-civ-spouse, Adm-clerical, Husband, Male, <=50K,Cancer,0
-30, HS-grad, Married-civ-spouse, Machine-op-inspct, Husband, Male, <=50K,Hypertension,8
-30, Bachelors, Married-civ-spouse, Sales, Husband, Male, <=50K,Hypertension,10
-32, 7th-8th, Married-spouse-absent,, Not-in-family, Male, <=50K,Asthma,8
-48, HS-grad, Married-civ-spouse, Transport-moving, Husband, Male, <=50K,Diabetes,0
-42, Doctorate, Married-civ-spouse, Prof-specialty, Husband, Male, >50K,Asthma,4
-29, Some-college, Divorced, Tech-support, Not-in-family, Male, <=50K,Asthma,2
-36, HS-grad, Married-civ-spouse, Craft-repair, Husband, Male, <=50K,Heart Disease,2
-28, Some-college, Divorced, Adm-clerical, Not-in-family, Female, <=50K,Diabetes,4
-53, HS-grad, Married-civ-spouse, Adm-clerical, Wife, Female, >50K,Hypertension,4
-49, Some-college, Married-civ-spouse, Exec-managerial, Husband, Male, >50K,Diabetes,10
-25, Some-college, Never-married,, Own-child, Male, <=50K,Heart Disease,10
-19, Some-college, Never-married, Prof-specialty, Own-child, Male, <=50K,Heart Disease,8
-31, Bachelors, Separated, Sales, Own-child, Female, <=50K,Diabetes,0
-29, Bachelors, Married-civ-spouse, Sales, Husband, Male, >50K,Hypertension,2
-23, Some-college, Never-married, Machine-op-inspct, Not-in-family, Male, <=50K,Diabetes,0
-79, Some-college, Married-civ-spouse, Prof-specialty, Other-relative, Male, <=50K,Heart Disease,4
-27, HS-grad, Never-married, Other-service, Own-child, Male, <=50K,Diabetes,2
-40, Assoc-acdm, Married-civ-spouse, Adm-clerical, Husband, Male, <=50K,Cancer,8
-67, 10th, Married-civ-spouse,, Husband, Male, <=50K,Hypertension,4
-18, 11th, Never-married, Other-service, Own-child, Female, <=50K,Asthma,0
-31, 7th-8th, Married-civ-spouse, Farming-fishing, Husband, Male, <=50K,Cancer,2
-18, HS-grad, Never-married, Sales, Not-in-family, Male, <=50K,Asthma,8
-52, Bachelors, Married-civ-spouse, Other-service, Husband, Male, <=50K,Cancer,10
-46, HS-grad, Married-civ-spouse, Other-service, Wife, Female, <=50K,Heart Disease,6
-59, HS-grad, Married-civ-spouse, Sales, Husband, Male, <=50K,Asthma,10
-44, HS-grad, Divorced, Craft-repair, Not-in-family, Female, >50K,Hypertension,10
-53, HS-grad, Divorced, Sales, Own-child, Female, <=50K,Asthma,10
-49, HS-grad, Married-civ-spouse, Protective-serv, Husband, Male, >50K,Heart Disease,8
-33, Masters, Married-civ-spouse, Prof-specialty, Husband, Male, <=50K,Cancer,10
-30, 9th, Never-married, Sales, Not-in-family, Male, <=50K,Diabetes,4
-43, Doctorate, Never-married, Prof-specialty, Not-in-family, Female, >50K,Cancer,0
-57, Assoc-voc, Married-civ-spouse, Prof-specialty, Husband, Male, <=50K,Hypertension,4
-37, Some-college, Divorced, Craft-repair, Unmarried, Female, <=50K,Diabetes,10
-28, Some-college, Divorced, Machine-op-inspct, Unmarried, Female, <=50K,Diabetes,0
-30, HS-grad, Married-civ-spouse, Sales, Wife, Female, <=50K,Cancer,0
-34, Bachelors, Married-civ-spouse, Protective-serv, Husband, Male, >50K,Diabetes,6
-29, Some-college, Never-married, Handlers-cleaners, Not-in-family, Male, <=50K,Heart Disease,4
-48, Doctorate, Married-civ-spouse, Prof-specialty, Husband, Male, >50K,Hypertension,0
-37, Some-college, Married-civ-spouse, Sales, Husband, Male, >50K,Diabetes,2
-48, Assoc-acdm, Divorced, Exec-managerial, Unmarried, Female, <=50K,Cancer,10
-32, HS-grad, Never-married, Other-service, Own-child, Male, <=50K,Asthma,6
-76, Masters, Married-civ-spouse, Exec-managerial, Husband, Male, >50K,Hypertension,2
-44, Bachelors, Married-civ-spouse, Exec-managerial, Husband, Male, >50K,Hypertension,10
-47, Masters, Never-married, Prof-specialty, Not-in-family, Female, <=50K,Cancer,8
-20, Some-college, Never-married, Tech-support, Own-child, Female, <=50K,Cancer,0
-29, HS-grad, Never-married, Craft-repair, Not-in-family, Male, <=50K,Cancer,8
-32, HS-grad, Married-civ-spouse, Craft-repair, Husband, Male, >50K,Cancer,2
-17, 10th, Never-married,, Own-child, Female, <=50K,Cancer,2
-30, 11th, Never-married, Handlers-cleaners, Own-child, Male, <=50K,Heart Disease,6
-31, HS-grad, Never-married, Adm-clerical, Not-in-family, Female, <=50K,Cancer,10
-42, HS-grad, Married-civ-spouse, Handlers-cleaners, Husband, Male, <=50K,Heart Disease,4
-24, Bachelors, Never-married, Sales, Other-relative, Male, <=50K,Heart Disease,10
-38, Prof-school, Married-civ-spouse, Prof-specialty, Husband, Male, >50K,Hypertension,2
-56, HS-grad, Married-civ-spouse, Other-service, Husband, Male, >50K,Heart Disease,0
-28, Some-college, Married-civ-spouse, Sales, Wife, Female, <=50K,Hypertension,2
-36, HS-grad, Never-married, Machine-op-inspct, Own-child, Female, <=50K,Cancer,0
-53, 9th, Married-civ-spouse, Handlers-cleaners, Husband, Male, <=50K,Cancer,8
-56, Some-college, Married-civ-spouse, Sales, Husband, Male, <=50K,Diabetes,10
-49, Assoc-voc, Married-civ-spouse, Craft-repair, Husband, Male, >50K,Hypertension,6
-55, Some-college, Married-civ-spouse, Sales, Husband, Male, <=50K,Cancer,8
-22, HS-grad, Never-married, Craft-repair, Not-in-family, Male, <=50K,Asthma,0
-21, Some-college, Never-married, Other-service, Own-child, Female, <=50K,Heart Disease,0
-40, Bachelors, Married-civ-spouse, Exec-managerial, Husband, Male, <=50K,Heart Disease,8
-30, Bachelors, Never-married, Exec-managerial, Own-child, Male, <=50K,Heart Disease,6
-29, Bachelors, Married-civ-spouse, Prof-specialty, Husband, Male, >50K,Hypertension,10
-19, Some-college, Never-married, Other-service, Own-child, Male, <=50K,Asthma,8
-47, Bachelors, Married-civ-spouse, Exec-managerial, Wife, Female, >50K,Asthma,6
-20, Some-college, Never-married, Adm-clerical, Own-child, Female, <=50K,Diabetes,10
-31, Assoc-acdm, Married-civ-spouse, Adm-clerical, Husband, Male, >50K,Hypertension,8
-35, HS-grad, Married-civ-spouse,, Husband, Male, <=50K,Diabetes,2
-39, Some-college, Divorced, Craft-repair, Not-in-family, Male, <=50K,Diabetes,8
-28, Assoc-acdm, Never-married, Sales, Not-in-family, Female, <=50K,Hypertension,10
-24, HS-grad, Never-married, Other-service, Not-in-family, Female, <=50K,Heart Disease,4
-38, HS-grad, Married-civ-spouse, Craft-repair, Husband, Male, <=50K,Cancer,4
-37, Bachelors, Married-civ-spouse, Sales, Husband, Male, <=50K,Cancer,10
-46, Assoc-acdm, Divorced, Tech-support, Not-in-family, Female, <=50K,Heart Disease,10
-38, Masters, Married-civ-spouse, Prof-specialty, Husband, Male, >50K,Diabetes,10
-43, HS-grad, Married-civ-spouse, Craft-repair, Husband, Male, <=50K,Diabetes,6
-27, Assoc-voc, Married-civ-spouse, Adm-clerical, Wife, Female, <=50K,Heart Disease,10
-20, Some-college, Never-married, Sales, Own-child, Male, <=50K,Hypertension,6
-49, Some-college, Married-civ-spouse, Craft-repair, Husband, Male, >50K,Heart Disease,0
-61, HS-grad, Married-civ-spouse, Craft-repair, Husband, Male, <=50K,Hypertension,8
-27, Some-college, Never-married, Sales, Own-child, Female, <=50K,Heart Disease,6
-19, Some-college, Never-married, Other-service, Own-child, Male, <=50K,Heart Disease,4
-45, Assoc-voc, Never-married, Prof-specialty, Not-in-family, Female, >50K,Asthma,2
-70, Some-college, Never-married, Tech-support, Other-relative, Male, <=50K,Diabetes,4
-31, HS-grad, Never-married, Transport-moving, Unmarried, Female, <=50K,Cancer,6
-22, Some-college, Married-civ-spouse, Other-service, Husband, Male, <=50K,Cancer,4
-36, HS-grad, Widowed, Other-service, Unmarried, Female, <=50K,Heart Disease,0
-64, 11th, Married-civ-spouse, Craft-repair, Husband, Male, <=50K,Cancer,2
-43, Some-college, Divorced,, Not-in-family, Female, <=50K,Hypertension,4
-47, Some-college, Divorced, Adm-clerical, Unmarried, Female, <=50K,Heart Disease,2
-34, HS-grad, Never-married, Adm-clerical, Not-in-family, Female, <=50K,Heart Disease,6
-33, Bachelors, Never-married, Exec-managerial, Other-relative, Female, <=50K,Asthma,8
-21, HS-grad, Never-married, Craft-repair, Own-child, Male, <=50K,Diabetes,4
-52, HS-grad, Divorced,, Not-in-family, Male, >50K,Hypertension,0
-48, HS-grad, Married-civ-spouse, Craft-repair, Husband, Male, <=50K,Hypertension,2
-23, Bachelors, Never-married, Handlers-cleaners, Not-in-family, Male, <=50K,Hypertension,10
-71, Some-college, Separated, Sales, Unmarried, Male, <=50K,Hypertension,4
-29, HS-grad, Divorced, Craft-repair, Not-in-family, Male, <=50K,Cancer,10
-42, Bachelors, Separated, Other-service, Other-relative, Male, <=50K,Heart Disease,0
-68, 1st-4th, Divorced,, Not-in-family, Female, <=50K,Diabetes,0
-25, HS-grad, Never-married, Other-service, Unmarried, Female, <=50K,Asthma,2
-44, Masters, Divorced, Exec-managerial, Unmarried, Female, <=50K,Diabetes,10
-28, HS-grad, Never-married, Exec-managerial, Not-in-family, Female, <=50K,Asthma,4
-45, Masters, Married-civ-spouse, Sales, Husband, Male, >50K,Heart Disease,2
-36, Some-college, Divorced, Other-service, Unmarried, Female, <=50K,Asthma,2
-39, Assoc-acdm, Never-married, Exec-managerial, Not-in-family, Male, <=50K,Diabetes,2
-46, Masters, Widowed, Protective-serv, Unmarried, Male, <=50K,Cancer,10
-18, 11th, Never-married, Handlers-cleaners, Own-child, Male, <=50K,Cancer,2
-66, Assoc-voc, Widowed, Prof-specialty, Not-in-family, Female, <=50K,Diabetes,2
-27, HS-grad, Never-married, Other-service, Not-in-family, Male, <=50K,Cancer,0
-28, HS-grad, Married-civ-spouse, Protective-serv, Husband, Male, <=50K,Hypertension,6
-51, Some-college, Married-civ-spouse, Sales, Husband, Male, >50K,Hypertension,2
-27, Bachelors, Never-married, Craft-repair, Not-in-family, Male, <=50K,Asthma,4
-28, Bachelors, Married-civ-spouse, Prof-specialty, Husband, Male, >50K,Diabetes,0
-27, HS-grad, Married-spouse-absent, Sales, Unmarried, Female, <=50K,Cancer,2
-21, HS-grad, Never-married, Craft-repair, Own-child, Male, <=50K,Hypertension,10
-34, HS-grad, Never-married, Handlers-cleaners, Not-in-family, Male, <=50K,Heart Disease,2
-18, HS-grad, Never-married, Other-service, Own-child, Male, <=50K,Hypertension,8
-33, Bachelors, Married-civ-spouse, Prof-specialty, Husband, Male, <=50K,Asthma,6
-44, Some-college, Married-civ-spouse, Exec-managerial, Husband, Male, >50K,Cancer,0
-43, Some-college, Divorced, Adm-clerical, Not-in-family, Female, <=50K,Heart Disease,4
-30, Some-college, Never-married, Craft-repair, Not-in-family, Male, <=50K,Hypertension,2
-40, 7th-8th, Married-civ-spouse, Machine-op-inspct, Husband, Male, >50K,Diabetes,2
-37, Some-college, Married-civ-spouse, Adm-clerical, Husband, Male, >50K,Heart Disease,10
-34, HS-grad, Married-civ-spouse, Adm-clerical, Husband, Male, <=50K,Diabetes,8
-41, Bachelors, Divorced, Exec-managerial, Not-in-family, Female, <=50K,Cancer,4
-53, Bachelors, Divorced,, Not-in-family, Female, <=50K,Asthma,0
-31, Masters, Married-civ-spouse, Prof-specialty, Wife, Female, <=50K,Asthma,6
-58, Doctorate, Married-civ-spouse, Prof-specialty, Husband, Male, >50K,Cancer,6
-38, Some-college, Divorced, Machine-op-inspct, Not-in-family, Female, <=50K,Cancer,8
-24, Some-college, Married-civ-spouse, Machine-op-inspct, Husband, Male, <=50K,Asthma,4
-41, Bachelors, Married-civ-spouse, Craft-repair, Husband, Male, <=50K,Diabetes,4
-47, Some-college, Married-civ-spouse, Tech-support, Husband, Male, <=50K,Hypertension,8
-41, Bachelors, Married-civ-spouse, Tech-support, Husband, Male, <=50K,Hypertension,4
-23, 5th-6th, Married-civ-spouse, Transport-moving, Other-relative, Male, <=50K,Asthma,4
-36, Some-college, Divorced, Craft-repair, Not-in-family, Male, <=50K,Asthma,6
-40, Masters, Never-married, Exec-managerial, Not-in-family, Female, >50K,Cancer,4
-35, Masters, Married-civ-spouse, Prof-specialty, Other-relative, Male, >50K,Cancer,8
-24, HS-grad, Never-married, Sales, Not-in-family, Male, <=50K,Asthma,6
+"ID",age, education, marital-status, occupation, relationship, sex, salary-class,disease,exercise_weekly_hours
+222,39, Bachelors, Never-married, Adm-clerical, Not-in-family, Male, <=50K,Hypertension,2
+299,50, Bachelors, Married-civ-spouse, Exec-managerial, Husband, Male, <=50K,Asthma,0
+868,38, HS-grad, Divorced, Handlers-cleaners, Not-in-family, Male, <=50K,Diabetes,6
+468,53, 11th, Married-civ-spouse, Handlers-cleaners, Husband, Male, <=50K,Diabetes,10
+302,28, Bachelors, Married-civ-spouse, Prof-specialty, Wife, Female, <=50K,Cancer,2
+560,37, Masters, Married-civ-spouse, Exec-managerial, Wife, Female, <=50K,Heart Disease,8
+456,49, 9th, Married-spouse-absent, Other-service, Not-in-family, Female, <=50K,Cancer,8
+598,52, HS-grad, Married-civ-spouse, Exec-managerial, Husband, Male, >50K,Cancer,0
+498,31, Masters, Never-married, Prof-specialty, Not-in-family, Female, >50K,Asthma,4
+368,42, Bachelors, Married-civ-spouse, Exec-managerial, Husband, Male, >50K,Heart Disease,4
+788,37, Some-college, Married-civ-spouse, Exec-managerial, Husband, Male, >50K,Hypertension,8
+835,30, Bachelors, Married-civ-spouse, Prof-specialty, Husband, Male, >50K,Cancer,10
+632,23, Bachelors, Never-married, Adm-clerical, Own-child, Female, <=50K,Hypertension,2
+493,32, Assoc-acdm, Never-married, Sales, Not-in-family, Male, <=50K,Cancer,10
+329,40, Assoc-voc, Married-civ-spouse, Craft-repair, Husband, Male, >50K,Diabetes,6
+712,34, 7th-8th, Married-civ-spouse, Transport-moving, Husband, Male, <=50K,Asthma,6
+443,25, HS-grad, Never-married, Farming-fishing, Own-child, Male, <=50K,Heart Disease,10
+594,32, HS-grad, Never-married, Machine-op-inspct, Unmarried, Male, <=50K,Hypertension,2
+845,38, 11th, Married-civ-spouse, Sales, Husband, Male, <=50K,Heart Disease,4
+499,43, Masters, Divorced, Exec-managerial, Unmarried, Female, >50K,Hypertension,2
+745,40, Doctorate, Married-civ-spouse, Prof-specialty, Husband, Male, >50K,Hypertension,2
+601,54, HS-grad, Separated, Other-service, Unmarried, Female, <=50K,Diabetes,4
+380,35, 9th, Married-civ-spouse, Farming-fishing, Husband, Male, <=50K,Heart Disease,0
+145,43, 11th, Married-civ-spouse, Transport-moving, Husband, Male, <=50K,Diabetes,8
+270,59, HS-grad, Divorced, Tech-support, Unmarried, Female, <=50K,Asthma,6
+298,56, Bachelors, Married-civ-spouse, Tech-support, Husband, Male, >50K,Asthma,6
+522,19, HS-grad, Never-married, Craft-repair, Own-child, Male, <=50K,Diabetes,8
+483,54, Some-college, Married-civ-spouse,, Husband, Male, >50K,Cancer,0
+179,39, HS-grad, Divorced, Exec-managerial, Not-in-family, Male, <=50K,Diabetes,10
+536,49, HS-grad, Married-civ-spouse, Craft-repair, Husband, Male, <=50K,Heart Disease,4
+948,23, Assoc-acdm, Never-married, Protective-serv, Not-in-family, Male, <=50K,Cancer,10
+596,20, Some-college, Never-married, Sales, Own-child, Male, <=50K,Hypertension,6
+433,45, Bachelors, Divorced, Exec-managerial, Own-child, Male, <=50K,Asthma,0
+923,30, Some-college, Married-civ-spouse, Adm-clerical, Own-child, Male, <=50K,Diabetes,4
+876,22, Some-college, Married-civ-spouse, Other-service, Husband, Male, <=50K,Hypertension,6
+985,48, 11th, Never-married, Machine-op-inspct, Unmarried, Male, <=50K,Heart Disease,10
+785,21, Some-college, Never-married, Machine-op-inspct, Own-child, Male, <=50K,Diabetes,8
+141,19, HS-grad, Married-AF-spouse, Adm-clerical, Wife, Female, <=50K,Heart Disease,2
+822,31, Some-college, Married-civ-spouse, Sales, Husband, Male, >50K,Cancer,6
+474,48, Assoc-acdm, Married-civ-spouse, Prof-specialty, Husband, Male, <=50K,Heart Disease,2
+133,31, 9th, Married-civ-spouse, Machine-op-inspct, Husband, Male, <=50K,Asthma,6
+102,53, Bachelors, Married-civ-spouse, Prof-specialty, Husband, Male, <=50K,Hypertension,0
+964,24, Bachelors, Married-civ-spouse, Tech-support, Husband, Male, <=50K,Cancer,6
+469,49, HS-grad, Separated, Adm-clerical, Unmarried, Female, <=50K,Heart Disease,6
+700,25, HS-grad, Never-married, Handlers-cleaners, Not-in-family, Male, <=50K,Asthma,8
+430,57, Bachelors, Married-civ-spouse, Prof-specialty, Husband, Male, >50K,Diabetes,8
+311,53, HS-grad, Married-civ-spouse, Machine-op-inspct, Husband, Male, <=50K,Hypertension,6
+418,44, Masters, Divorced, Exec-managerial, Unmarried, Female, <=50K,Diabetes,4
+790,41, Assoc-voc, Married-civ-spouse, Craft-repair, Husband, Male, <=50K,Cancer,0
+574,29, Assoc-voc, Never-married, Prof-specialty, Not-in-family, Male, <=50K,Hypertension,10
+457,25, Some-college, Married-civ-spouse, Exec-managerial, Wife, Female, <=50K,Hypertension,10
+837,18, HS-grad, Never-married, Other-service, Own-child, Female, <=50K,Diabetes,0
+957,47, Prof-school, Married-civ-spouse, Prof-specialty, Wife, Female, >50K,Asthma,8
+884,50, Bachelors, Divorced, Exec-managerial, Not-in-family, Male, >50K,Hypertension,10
+269,47, HS-grad, Divorced, Exec-managerial, Not-in-family, Male, <=50K,Hypertension,8
+216,43, Some-college, Married-civ-spouse, Tech-support, Husband, Male, >50K,Hypertension,10
+321,46, 5th-6th, Married-civ-spouse, Machine-op-inspct, Husband, Male, <=50K,Heart Disease,10
+307,35, Assoc-voc, Married-civ-spouse, Other-service, Husband, Male, <=50K,Asthma,2
+967,41, HS-grad, Married-civ-spouse, Adm-clerical, Husband, Male, <=50K,Cancer,0
+275,30, HS-grad, Married-civ-spouse, Machine-op-inspct, Husband, Male, <=50K,Hypertension,8
+358,30, Bachelors, Married-civ-spouse, Sales, Husband, Male, <=50K,Hypertension,10
+218,32, 7th-8th, Married-spouse-absent,, Not-in-family, Male, <=50K,Asthma,8
+989,48, HS-grad, Married-civ-spouse, Transport-moving, Husband, Male, <=50K,Diabetes,0
+295,42, Doctorate, Married-civ-spouse, Prof-specialty, Husband, Male, >50K,Asthma,4
+945,29, Some-college, Divorced, Tech-support, Not-in-family, Male, <=50K,Asthma,2
+419,36, HS-grad, Married-civ-spouse, Craft-repair, Husband, Male, <=50K,Heart Disease,2
+888,28, Some-college, Divorced, Adm-clerical, Not-in-family, Female, <=50K,Diabetes,4
+907,53, HS-grad, Married-civ-spouse, Adm-clerical, Wife, Female, >50K,Hypertension,4
+139,49, Some-college, Married-civ-spouse, Exec-managerial, Husband, Male, >50K,Diabetes,10
+662,25, Some-college, Never-married,, Own-child, Male, <=50K,Heart Disease,10
+376,19, Some-college, Never-married, Prof-specialty, Own-child, Male, <=50K,Heart Disease,8
+586,31, Bachelors, Separated, Sales, Own-child, Female, <=50K,Diabetes,0
+297,29, Bachelors, Married-civ-spouse, Sales, Husband, Male, >50K,Hypertension,2
+787,23, Some-college, Never-married, Machine-op-inspct, Not-in-family, Male, <=50K,Diabetes,0
+451,79, Some-college, Married-civ-spouse, Prof-specialty, Other-relative, Male, <=50K,Heart Disease,4
+143,27, HS-grad, Never-married, Other-service, Own-child, Male, <=50K,Diabetes,2
+494,40, Assoc-acdm, Married-civ-spouse, Adm-clerical, Husband, Male, <=50K,Cancer,8
+403,67, 10th, Married-civ-spouse,, Husband, Male, <=50K,Hypertension,4
+395,18, 11th, Never-married, Other-service, Own-child, Female, <=50K,Asthma,0
+364,31, 7th-8th, Married-civ-spouse, Farming-fishing, Husband, Male, <=50K,Cancer,2
+701,18, HS-grad, Never-married, Sales, Not-in-family, Male, <=50K,Asthma,8
+490,52, Bachelors, Married-civ-spouse, Other-service, Husband, Male, <=50K,Cancer,10
+650,46, HS-grad, Married-civ-spouse, Other-service, Wife, Female, <=50K,Heart Disease,6
+254,59, HS-grad, Married-civ-spouse, Sales, Husband, Male, <=50K,Asthma,10
+678,44, HS-grad, Divorced, Craft-repair, Not-in-family, Female, >50K,Hypertension,10
+852,53, HS-grad, Divorced, Sales, Own-child, Female, <=50K,Asthma,10
+991,49, HS-grad, Married-civ-spouse, Protective-serv, Husband, Male, >50K,Heart Disease,8
+256,33, Masters, Married-civ-spouse, Prof-specialty, Husband, Male, <=50K,Cancer,10
+847,30, 9th, Never-married, Sales, Not-in-family, Male, <=50K,Diabetes,4
+136,43, Doctorate, Never-married, Prof-specialty, Not-in-family, Female, >50K,Cancer,0
+750,57, Assoc-voc, Married-civ-spouse, Prof-specialty, Husband, Male, <=50K,Hypertension,4
+355,37, Some-college, Divorced, Craft-repair, Unmarried, Female, <=50K,Diabetes,10
+738,28, Some-college, Divorced, Machine-op-inspct, Unmarried, Female, <=50K,Diabetes,0
+657,30, HS-grad, Married-civ-spouse, Sales, Wife, Female, <=50K,Cancer,0
+506,34, Bachelors, Married-civ-spouse, Protective-serv, Husband, Male, >50K,Diabetes,6
+699,29, Some-college, Never-married, Handlers-cleaners, Not-in-family, Male, <=50K,Heart Disease,4
+816,48, Doctorate, Married-civ-spouse, Prof-specialty, Husband, Male, >50K,Hypertension,0
+818,37, Some-college, Married-civ-spouse, Sales, Husband, Male, >50K,Diabetes,2
+436,48, Assoc-acdm, Divorced, Exec-managerial, Unmarried, Female, <=50K,Cancer,10
+710,32, HS-grad, Never-married, Other-service, Own-child, Male, <=50K,Asthma,6
+720,76, Masters, Married-civ-spouse, Exec-managerial, Husband, Male, >50K,Hypertension,2
+557,44, Bachelors, Married-civ-spouse, Exec-managerial, Husband, Male, >50K,Hypertension,10
+562,47, Masters, Never-married, Prof-specialty, Not-in-family, Female, <=50K,Cancer,8
+525,20, Some-college, Never-married, Tech-support, Own-child, Female, <=50K,Cancer,0
+865,29, HS-grad, Never-married, Craft-repair, Not-in-family, Male, <=50K,Cancer,8
+283,32, HS-grad, Married-civ-spouse, Craft-repair, Husband, Male, >50K,Cancer,2
+832,17, 10th, Never-married,, Own-child, Female, <=50K,Cancer,2
+670,30, 11th, Never-married, Handlers-cleaners, Own-child, Male, <=50K,Heart Disease,6
+959,31, HS-grad, Never-married, Adm-clerical, Not-in-family, Female, <=50K,Cancer,10
+970,42, HS-grad, Married-civ-spouse, Handlers-cleaners, Husband, Male, <=50K,Heart Disease,4
+121,24, Bachelors, Never-married, Sales, Other-relative, Male, <=50K,Heart Disease,10
+647,38, Prof-school, Married-civ-spouse, Prof-specialty, Husband, Male, >50K,Hypertension,2
+428,56, HS-grad, Married-civ-spouse, Other-service, Husband, Male, >50K,Heart Disease,0
+995,28, Some-college, Married-civ-spouse, Sales, Wife, Female, <=50K,Hypertension,2
+479,36, HS-grad, Never-married, Machine-op-inspct, Own-child, Female, <=50K,Cancer,0
+719,53, 9th, Married-civ-spouse, Handlers-cleaners, Husband, Male, <=50K,Cancer,8
+994,56, Some-college, Married-civ-spouse, Sales, Husband, Male, <=50K,Diabetes,10
+164,49, Assoc-voc, Married-civ-spouse, Craft-repair, Husband, Male, >50K,Hypertension,6
+858,55, Some-college, Married-civ-spouse, Sales, Husband, Male, <=50K,Cancer,8
+891,22, HS-grad, Never-married, Craft-repair, Not-in-family, Male, <=50K,Asthma,0
+735,21, Some-college, Never-married, Other-service, Own-child, Female, <=50K,Heart Disease,0
+571,40, Bachelors, Married-civ-spouse, Exec-managerial, Husband, Male, <=50K,Heart Disease,8
+597,30, Bachelors, Never-married, Exec-managerial, Own-child, Male, <=50K,Heart Disease,6
+555,29, Bachelors, Married-civ-spouse, Prof-specialty, Husband, Male, >50K,Hypertension,10
+965,19, Some-college, Never-married, Other-service, Own-child, Male, <=50K,Asthma,8
+713,47, Bachelors, Married-civ-spouse, Exec-managerial, Wife, Female, >50K,Asthma,6
+369,20, Some-college, Never-married, Adm-clerical, Own-child, Female, <=50K,Diabetes,10
+885,31, Assoc-acdm, Married-civ-spouse, Adm-clerical, Husband, Male, >50K,Hypertension,8
+375,35, HS-grad, Married-civ-spouse,, Husband, Male, <=50K,Diabetes,2
+207,39, Some-college, Divorced, Craft-repair, Not-in-family, Male, <=50K,Diabetes,8
+605,28, Assoc-acdm, Never-married, Sales, Not-in-family, Female, <=50K,Hypertension,10
+414,24, HS-grad, Never-married, Other-service, Not-in-family, Female, <=50K,Heart Disease,4
+106,38, HS-grad, Married-civ-spouse, Craft-repair, Husband, Male, <=50K,Cancer,4
+393,37, Bachelors, Married-civ-spouse, Sales, Husband, Male, <=50K,Cancer,10
+854,46, Assoc-acdm, Divorced, Tech-support, Not-in-family, Female, <=50K,Heart Disease,10
+808,38, Masters, Married-civ-spouse, Prof-specialty, Husband, Male, >50K,Diabetes,10
+127,43, HS-grad, Married-civ-spouse, Craft-repair, Husband, Male, <=50K,Diabetes,6
+381,27, Assoc-voc, Married-civ-spouse, Adm-clerical, Wife, Female, <=50K,Heart Disease,10
+900,20, Some-college, Never-married, Sales, Own-child, Male, <=50K,Hypertension,6
+768,49, Some-college, Married-civ-spouse, Craft-repair, Husband, Male, >50K,Heart Disease,0
+527,61, HS-grad, Married-civ-spouse, Craft-repair, Husband, Male, <=50K,Hypertension,8
+987,27, Some-college, Never-married, Sales, Own-child, Female, <=50K,Heart Disease,6
+590,19, Some-college, Never-married, Other-service, Own-child, Male, <=50K,Heart Disease,4
+401,45, Assoc-voc, Never-married, Prof-specialty, Not-in-family, Female, >50K,Asthma,2
+320,70, Some-college, Never-married, Tech-support, Other-relative, Male, <=50K,Diabetes,4
+250,31, HS-grad, Never-married, Transport-moving, Unmarried, Female, <=50K,Cancer,6
+718,22, Some-college, Married-civ-spouse, Other-service, Husband, Male, <=50K,Cancer,4
+431,36, HS-grad, Widowed, Other-service, Unmarried, Female, <=50K,Heart Disease,0
+621,64, 11th, Married-civ-spouse, Craft-repair, Husband, Male, <=50K,Cancer,2
+589,43, Some-college, Divorced,, Not-in-family, Female, <=50K,Hypertension,4
+162,47, Some-college, Divorced, Adm-clerical, Unmarried, Female, <=50K,Heart Disease,2
+842,34, HS-grad, Never-married, Adm-clerical, Not-in-family, Female, <=50K,Heart Disease,6
+147,33, Bachelors, Never-married, Exec-managerial, Other-relative, Female, <=50K,Asthma,8
+551,21, HS-grad, Never-married, Craft-repair, Own-child, Male, <=50K,Diabetes,4
+828,52, HS-grad, Divorced,, Not-in-family, Male, >50K,Hypertension,0
+614,48, HS-grad, Married-civ-spouse, Craft-repair, Husband, Male, <=50K,Hypertension,2
+314,23, Bachelors, Never-married, Handlers-cleaners, Not-in-family, Male, <=50K,Hypertension,10
+993,71, Some-college, Separated, Sales, Unmarried, Male, <=50K,Hypertension,4
+696,29, HS-grad, Divorced, Craft-repair, Not-in-family, Male, <=50K,Cancer,10
+937,42, Bachelors, Separated, Other-service, Other-relative, Male, <=50K,Heart Disease,0
+999,68, 1st-4th, Divorced,, Not-in-family, Female, <=50K,Diabetes,0
+952,25, HS-grad, Never-married, Other-service, Unmarried, Female, <=50K,Asthma,2
+859,44, Masters, Divorced, Exec-managerial, Unmarried, Female, <=50K,Diabetes,10
+313,28, HS-grad, Never-married, Exec-managerial, Not-in-family, Female, <=50K,Asthma,4
+930,45, Masters, Married-civ-spouse, Sales, Husband, Male, >50K,Heart Disease,2
+725,36, Some-college, Divorced, Other-service, Unmarried, Female, <=50K,Asthma,2
+278,39, Assoc-acdm, Never-married, Exec-managerial, Not-in-family, Male, <=50K,Diabetes,2
+539,46, Masters, Widowed, Protective-serv, Unmarried, Male, <=50K,Cancer,10
+887,18, 11th, Never-married, Handlers-cleaners, Own-child, Male, <=50K,Cancer,2
+444,66, Assoc-voc, Widowed, Prof-specialty, Not-in-family, Female, <=50K,Diabetes,2
+643,27, HS-grad, Never-married, Other-service, Not-in-family, Male, <=50K,Cancer,0
+335,28, HS-grad, Married-civ-spouse, Protective-serv, Husband, Male, <=50K,Hypertension,6
+827,51, Some-college, Married-civ-spouse, Sales, Husband, Male, >50K,Hypertension,2
+819,27, Bachelors, Never-married, Craft-repair, Not-in-family, Male, <=50K,Asthma,4
+409,28, Bachelors, Married-civ-spouse, Prof-specialty, Husband, Male, >50K,Diabetes,0
+703,27, HS-grad, Married-spouse-absent, Sales, Unmarried, Female, <=50K,Cancer,2
+896,21, HS-grad, Never-married, Craft-repair, Own-child, Male, <=50K,Hypertension,10
+155,34, HS-grad, Never-married, Handlers-cleaners, Not-in-family, Male, <=50K,Heart Disease,2
+203,18, HS-grad, Never-married, Other-service, Own-child, Male, <=50K,Hypertension,8
+867,33, Bachelors, Married-civ-spouse, Prof-specialty, Husband, Male, <=50K,Asthma,6
+775,44, Some-college, Married-civ-spouse, Exec-managerial, Husband, Male, >50K,Cancer,0
+924,43, Some-college, Divorced, Adm-clerical, Not-in-family, Female, <=50K,Heart Disease,4
+866,30, Some-college, Never-married, Craft-repair, Not-in-family, Male, <=50K,Hypertension,2
+350,40, 7th-8th, Married-civ-spouse, Machine-op-inspct, Husband, Male, >50K,Diabetes,2
+579,37, Some-college, Married-civ-spouse, Adm-clerical, Husband, Male, >50K,Heart Disease,10
+857,34, HS-grad, Married-civ-spouse, Adm-clerical, Husband, Male, <=50K,Diabetes,8
+158,41, Bachelors, Divorced, Exec-managerial, Not-in-family, Female, <=50K,Cancer,4
+413,53, Bachelors, Divorced,, Not-in-family, Female, <=50K,Asthma,0
+860,31, Masters, Married-civ-spouse, Prof-specialty, Wife, Female, <=50K,Asthma,6
+390,58, Doctorate, Married-civ-spouse, Prof-specialty, Husband, Male, >50K,Cancer,6
+644,38, Some-college, Divorced, Machine-op-inspct, Not-in-family, Female, <=50K,Cancer,8
+707,24, Some-college, Married-civ-spouse, Machine-op-inspct, Husband, Male, <=50K,Asthma,4
+926,41, Bachelors, Married-civ-spouse, Craft-repair, Husband, Male, <=50K,Diabetes,4
+634,47, Some-college, Married-civ-spouse, Tech-support, Husband, Male, <=50K,Hypertension,8
+258,41, Bachelors, Married-civ-spouse, Tech-support, Husband, Male, <=50K,Hypertension,4
+915,23, 5th-6th, Married-civ-spouse, Transport-moving, Other-relative, Male, <=50K,Asthma,4
+966,36, Some-college, Divorced, Craft-repair, Not-in-family, Male, <=50K,Asthma,6
+919,40, Masters, Never-married, Exec-managerial, Not-in-family, Female, >50K,Cancer,4
+312,35, Masters, Married-civ-spouse, Prof-specialty, Other-relative, Male, >50K,Cancer,8
+417,24, HS-grad, Never-married, Sales, Not-in-family, Male, <=50K,Asthma,6

@@ -62,21 +62,93 @@ quotes prevent shells from interpreting the square brackets.
 
 ## Command line
 
-Every analysis and transformation can run without a GUI:
+Every analysis and transformation can run without the GUI. The examples use
+`conda run`, so the same commands work in PowerShell, Git Bash, and Linux
+without activating the environment first. If the environment is already
+activated, omit `conda run --name metaprivbids`.
+
+Use `metaprivBIDS COMMAND --help` to see the complete option reference for any
+command.
+
+### Inspect data and measure privacy
 
 ```console
 conda run --name metaprivbids metaprivBIDS inspect Use_Case_Data/adult_mini.csv
+conda run --name metaprivbids metaprivBIDS inspect Use_Case_Data/adult_mini.csv --continuous-threshold 45 --output column_profile.csv
 conda run --name metaprivbids metaprivBIDS privacy Use_Case_Data/adult_mini.csv --columns age,education,marital-status,occupation,relationship,sex --sensitive salary-class
 conda run --name metaprivbids metaprivBIDS k-global Use_Case_Data/adult_mini.csv --columns age,education,marital-status,occupation --output k_global.csv
-conda run --name metaprivbids metaprivBIDS round input.csv --column age --exponent 1 --output rounded.csv
-conda run --name metaprivbids metaprivBIDS noise input.csv --column age --distribution laplacian --scale 2 --seed 42 --output noisy.csv
-conda run --name metaprivbids metaprivBIDS combine input.csv --column occupation --values Sales,Service --replacement Customer-facing --output generalized.csv
-conda run --name metaprivbids metaprivBIDS cig input.csv --columns age,education,occupation --output cig.csv
-conda run --name metaprivbids metaprivBIDS suda input.csv --columns age,education,occupation --output suda.csv
+conda run --name metaprivbids metaprivBIDS k-combined Use_Case_Data/adult_mini.csv --columns age,education,marital-status,occupation --min-size 2 --max-size 4 --output k_combined.csv
 ```
 
-Additional commands include `k-combined`, `remove-decimals`, and `metadata`.
-Run `metaprivBIDS COMMAND --help` for all parameters and result export options.
+`inspect` classifies columns using the supplied unique-value threshold.
+`privacy` reports the number of unique records, k-anonymity, and l-diversity
+when a sensitive attribute is supplied. `k-global` evaluates each selected
+column separately; `k-combined` evaluates combinations between `--min-size`
+and `--max-size`.
+
+### Transform numeric and categorical values
+
+```console
+conda run --name metaprivbids metaprivBIDS round input.csv --column age --exponent 1 --mode nearest --output rounded.csv
+conda run --name metaprivbids metaprivBIDS bin input.csv --column age --bins 5 --output binned_by_count.csv
+conda run --name metaprivbids metaprivBIDS bin input.csv --column age --width 10 --output binned_by_width.csv
+conda run --name metaprivbids metaprivBIDS remove-decimals input.csv --column age --output whole_numbers.csv
+conda run --name metaprivbids metaprivBIDS noise input.csv --column age --distribution laplacian --scale 2 --seed 42 --output laplacian_noise.csv
+conda run --name metaprivbids metaprivBIDS noise input.csv --column age --distribution gaussian --scale 2 --seed 42 --output gaussian_noise.csv
+conda run --name metaprivbids metaprivBIDS combine input.csv --column occupation --values Sales,Service --replacement Customer-facing --output generalized.csv
+```
+
+Rounding supports `nearest`, `up`, and `down`. The exponent specifies the
+nearest power of ten: `0` rounds to units, `1` to tens, and `2` to hundreds.
+The exponent must be zero or positive.
+Binning uses equal-width intervals. Choose exactly one method: `--bins` sets
+the number of intervals, while `--width` sets the interval increment. Noise
+supports `laplacian` and `gaussian`; `--seed` makes a run reproducible.
+
+### Replace direct identifiers and shuffle rows
+
+```console
+conda run --name metaprivbids metaprivBIDS pseudonymize input.csv --id-column ID --output released.csv --key-output identifier_key.csv
+```
+
+This command replaces every direct identifier with a unique alphanumeric value
+of the same displayed length and randomly reorders the released rows. The
+separate key contains the old-to-new mapping. Treat the key as sensitive data:
+store it separately from the released dataset and do not distribute it with
+the anonymised file.
+
+### Compute CIG, RIG, and PIF
+
+```console
+conda run --name metaprivbids metaprivBIDS cig input.csv --columns age,education,occupation --percentile 95 --output cig_values.csv --summary-output cig_summary.csv --outliers-output rig_outliers.csv --outlier-threshold 2.2414
+```
+
+`--output` saves the row- and cell-level CIG/RIG results,
+`--summary-output` saves the variable summary, and `--outliers-output` saves
+RIG outliers detected with the supplied MAD threshold. Use `--mask-value nan`
+or another value when it should be treated as masked during the calculation.
+
+### Compute SUDA2 through R/sdcMicro
+
+```console
+conda run --name metaprivbids metaprivBIDS suda input.csv --columns age,education,occupation --sample-fraction 0.2 --output suda_scores.csv --contribution-percent-output suda_contribution_percent.csv --attribute-contributions-output suda_attribute_contributions.csv --attribute-level-output suda_attribute_levels.csv
+```
+
+The main output contains record-level disclosure scores. The three optional
+exports contain contribution percentages, attribute contributions, and
+attribute-level contributions. Use `--missing-value NUMBER` when the R method
+needs an explicit missing-value code. Add `--legacy-scores` only when legacy
+score scaling is required.
+
+### Inspect JSON metadata
+
+```console
+conda run --name metaprivbids metaprivBIDS metadata metadata.json
+conda run --name metaprivbids metaprivBIDS metadata metadata.json --column age
+```
+
+Without `--column`, the complete JSON metadata file is printed. With it, only
+the metadata associated with that column is printed.
 
 For an executable end-to-end walkthrough, install the notebook tools and open
 `MetaprivBIDS_CoreLogic_Tutorial.ipynb` from the repository root:
@@ -115,7 +187,16 @@ conda run --name metaprivbids metaprivBIDS-gui
 
 The server binds to `127.0.0.1`; uploaded data and results remain on the local
 machine. See [docs/functionality.md](docs/functionality.md) for the feature
-inventory and implementation sequence.
+reference and [docs/examples.rst](docs/examples.rst) for the illustrated
+browser workflow.
+
+Contributors can regenerate all GUI documentation screenshots from the current
+application and bundled sample data:
+
+```console
+conda run --name metaprivbids uv pip install -e ".[screenshots]"
+conda run --name metaprivbids python scripts/capture_docs_screenshots.py
+```
 
 ## Methods
 
@@ -123,7 +204,10 @@ inventory and implementation sequence.
 - K-global and K-combined variable contribution
 - SUDA2 through `sdcMicro`
 - cell/row information gain and Personal Information Factor (PIF)
-- rounding, decimal removal, categorical generalisation, and Laplacian or
+- direct-identifier replacement with a separately exported key and shuffled
+  row order; replacement IDs retain the original displayed length while using
+  letters and digits; equal-width binning, rounding, decimal removal,
+  categorical generalisation, and Laplacian or
   Gaussian noise
 
 metaprivBIDS is licensed under the MIT License.

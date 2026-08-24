@@ -83,6 +83,23 @@ command is portable between PowerShell and Bash:
 
 See :doc:`cli` for every command and :doc:`examples` for a short workflow.
 
+Documentation screenshots
+-------------------------
+
+The GUI walkthrough images are reproducible and stored in ``docs/_static``.
+They can be refreshed after interface changes without taking screenshots by
+hand:
+
+.. code-block:: console
+
+   conda run --name metaprivbids uv pip install -e ".[screenshots]"
+   conda run --name metaprivbids python scripts/capture_docs_screenshots.py
+
+Linux and macOS contributors must first install the Playwright Chromium
+runtime with ``python -m playwright install chromium`` inside the environment.
+Windows uses the installed Microsoft Edge browser. See :doc:`examples` for the
+generated walkthrough.
+
 Optional activation
 -------------------
 

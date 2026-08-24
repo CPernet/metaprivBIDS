@@ -18,6 +18,7 @@ from .corelogic import (
     CigResult,
     SudaResult,
     add_noise,
+    bin_numeric_values,
     calculate_k_combined,
     calculate_k_global,
     calculate_mad_outliers,
@@ -26,6 +27,7 @@ from .corelogic import (
     compute_cig,
     compute_suda2,
     profile_columns,
+    pseudonymize_identifiers,
     remove_decimals,
     revert_column,
     round_values,
@@ -63,7 +65,11 @@ class WorkspaceState:
     original: pd.DataFrame | None = None
     metadata: dict[str, Any] = field(default_factory=dict)
     column_roles: dict[str, str] = field(default_factory=dict)
+    privacy_quasi_identifiers: list[str] = field(default_factory=list)
+    sensitive_attribute: str | None = None
     history: dict[str, list[tuple[list[Any], Any]]] = field(default_factory=dict)
+    identifier_key: pd.DataFrame | None = None
+    identifier_column: str | None = None
     privacy_result: dict[str, Any] | None = None
     k_global_result: pd.DataFrame | None = None
     k_combined_result: pd.DataFrame | None = None
@@ -88,6 +94,7 @@ class WorkspaceState:
         return [
             column for column in self.columns
             if self.column_roles.get(column) == "Continuous"
+            and column != self.identifier_column
         ]
 
     @property
@@ -95,12 +102,61 @@ class WorkspaceState:
         return [
             column for column in self.columns
             if self.column_roles.get(column) == "Categorical"
+            and column != self.identifier_column
         ]
 
 
 def _records(frame: pd.DataFrame, limit: int | None = None) -> list[dict[str, Any]]:
     shown = frame.head(limit) if limit else frame
     return json.loads(shown.to_json(orient="records", date_format="iso"))
+
+
+def _eligible_quasi_identifiers(
+    columns: list[str],
+    sensitive_attribute: str | None,
+    identifier_column: str | None = None,
+) -> list[str]:
+    excluded = {sensitive_attribute, identifier_column}
+    return [column for column in columns if column not in excluded]
+
+
+def _multi_select_with_select_all(
+    options: list[str],
+    *,
+    label: str,
+    test_id: str,
+):
+    """Build a multi-select with a synchronized select-all checkbox."""
+
+    selection = ui.select(options, label=label, multiple=True).props(
+        f"use-chips data-testid={test_id}"
+    ).classes("w-full")
+    select_all = ui.checkbox("Select all quasi-identifiers").props(
+        f"data-testid={test_id}-select-all"
+    )
+    syncing = False
+
+    def toggle_all() -> None:
+        nonlocal syncing
+        if syncing:
+            return
+        syncing = True
+        selection.set_value(options if select_all.value else [])
+        syncing = False
+
+    def sync_checkbox() -> None:
+        nonlocal syncing
+        if syncing:
+            return
+        syncing = True
+        select_all.set_value(
+            bool(options) and set(selection.value or []) == set(options)
+        )
+        syncing = False
+
+    select_all.on_value_change(lambda _: toggle_all())
+    selection.on_value_change(lambda _: sync_checkbox())
+    return selection, select_all
 
 
 def _columns(frame: pd.DataFrame) -> list[dict[str, Any]]:
@@ -150,6 +206,32 @@ def _safe_outliers(values: pd.Series) -> pd.DataFrame:
         return pd.DataFrame(columns=["value", "z_score", "is_outlier"])
 
 
+def _outlier_box_figure(
+    values: pd.Series,
+    *,
+    trace_name: str,
+    height: int = 430,
+) -> go.Figure:
+    """Plot score outliers while identifying records by their source index."""
+    figure = go.Figure(go.Box(
+        y=values,
+        name=trace_name,
+        boxpoints="outliers",
+        customdata=values.index.astype(str),
+        hovertemplate="Source row: %{customdata}<extra></extra>",
+    ))
+    figure.update_layout(margin=dict(l=30, r=10, t=10, b=30), height=height)
+    return figure
+
+
+def _rig_outlier_figure(values: pd.Series) -> go.Figure:
+    return _outlier_box_figure(values, trace_name="RIG")
+
+
+def _disclosure_score_outlier_figure(values: pd.Series) -> go.Figure:
+    return _outlier_box_figure(values, trace_name="dis-score", height=400)
+
+
 class BrowserWorkspace:
     """Build one isolated in-memory workspace for a browser client."""
 
@@ -181,6 +263,41 @@ class BrowserWorkspace:
         self.state.column_roles[column] = role
         self.transform_panel.refresh()
         ui.notify(f"{column} is now treated as {role.lower()}.", type="positive")
+
+    def set_identifier_column(self, column: str | None) -> None:
+        if column is not None and column not in self.state.columns:
+            self._notify_error(ValueError(f"Column '{column}' is not available."))
+            return
+        if (
+            self.state.identifier_key is not None
+            and column != self.state.identifier_column
+        ):
+            self._notify_error(
+                ValueError("The identifier role cannot change after replacement IDs are generated.")
+            )
+            return
+        self.state.identifier_column = column
+        if column:
+            self.state.privacy_quasi_identifiers = [
+                value
+                for value in self.state.privacy_quasi_identifiers
+                if value != column
+            ]
+            if self.state.sensitive_attribute == column:
+                self.state.sensitive_attribute = None
+        self.data_panel.refresh()
+        self.risk_panel.refresh()
+        self.transform_panel.refresh()
+        if column:
+            ui.notify(f"{column} marked as the direct identifier.", type="positive")
+
+    def set_privacy_role(self, column: str, role: str) -> None:
+        if role == "Direct identifier":
+            self.set_identifier_column(column)
+        elif role == "Not assigned" and column == self.state.identifier_column:
+            self.set_identifier_column(None)
+        elif role != "Not assigned":
+            self._notify_error(ValueError(f"Unknown privacy role: {role}"))
 
     async def load_dataset(self, event: events.UploadEventArguments) -> None:
         try:
@@ -269,9 +386,14 @@ class BrowserWorkspace:
                     "Review the heuristic role and change it when domain knowledge says otherwise.",
                 )
                 profile = profile_columns(data)
-                with ui.grid(columns=5).classes("w-full items-center gap-x-5 gap-y-2"):
+                with ui.grid(columns=6).classes("w-full items-center gap-x-5 gap-y-2"):
                     headings = [
-                        "Column", "Distinct", "Storage type", "Missing", "Analysis role"
+                        "Column",
+                        "Distinct",
+                        "Storage type",
+                        "Missing",
+                        "Analysis role",
+                        "Privacy role",
                     ]
                     for heading in headings:
                         ui.label(heading).classes(
@@ -291,6 +413,21 @@ class BrowserWorkspace:
                                 column, event.value
                             )
                         )
+                        privacy_role = ui.select(
+                            ["Not assigned", "Direct identifier"],
+                            value=(
+                                "Direct identifier"
+                                if row.column == self.state.identifier_column
+                                else "Not assigned"
+                            ),
+                        ).props("dense outlined").classes("w-full")
+                        privacy_role.on_value_change(
+                            lambda event, column=row.column: self.set_privacy_role(
+                                column, event.value
+                            )
+                        )
+                        if self.state.identifier_key is not None:
+                            privacy_role.disable()
 
             with ui.card().classes("mp-panel w-full p-5"):
                 _section("Metadata", "Inspect the JSON entry associated with a dataset column.")
@@ -305,6 +442,8 @@ class BrowserWorkspace:
 
     def _run_privacy(self, qi: list[str], sensitive: str | None) -> None:
         try:
+            self.state.privacy_quasi_identifiers = list(qi)
+            self.state.sensitive_attribute = sensitive
             self.state.privacy_result = calculate_privacy_metrics(
                 self._require_data(), qi, sensitive
             )
@@ -332,17 +471,99 @@ class BrowserWorkspace:
     def risk_panel(self) -> None:
         with context.slot:
             with ui.card().classes("mp-panel w-full p-5"):
-                _section("Privacy summary", "Select quasi-identifiers and an optional sensitive attribute.")
-                qi = ui.select(
-                    self.state.columns,
-                    label="Quasi-identifiers",
-                    multiple=True,
-                ).props("use-chips").classes("w-full")
+                _section(
+                    "Privacy summary",
+                    "Select the sensitive attribute first, then choose quasi-identifiers.",
+                )
                 sensitive = ui.select(
-                    self.state.columns,
+                    [
+                        column
+                        for column in self.state.columns
+                        if column != self.state.identifier_column
+                    ],
                     label="Sensitive attribute (optional)",
+                    value=self.state.sensitive_attribute,
                     clearable=True,
                 ).classes("w-full")
+                eligible_qi = _eligible_quasi_identifiers(
+                    self.state.columns,
+                    self.state.sensitive_attribute,
+                    self.state.identifier_column,
+                )
+                selected_qi = [
+                    column
+                    for column in self.state.privacy_quasi_identifiers
+                    if column in eligible_qi
+                ]
+                qi = ui.select(
+                    eligible_qi,
+                    label="Quasi-identifiers",
+                    value=selected_qi,
+                    multiple=True,
+                ).props("use-chips").classes("w-full")
+                select_all = ui.checkbox(
+                    "Select all quasi-identifiers",
+                    value=bool(eligible_qi) and set(selected_qi) == set(eligible_qi),
+                )
+                syncing_selection = False
+
+                def sync_sensitive_attribute() -> None:
+                    nonlocal syncing_selection
+                    if syncing_selection:
+                        return
+                    syncing_selection = True
+                    available = _eligible_quasi_identifiers(
+                        self.state.columns,
+                        sensitive.value,
+                        self.state.identifier_column,
+                    )
+                    selected = (
+                        available
+                        if select_all.value
+                        else [column for column in (qi.value or []) if column in available]
+                    )
+                    self.state.sensitive_attribute = sensitive.value
+                    self.state.privacy_quasi_identifiers = list(selected)
+                    qi.set_options(available, value=selected)
+                    select_all.set_value(
+                        bool(available) and set(selected) == set(available)
+                    )
+                    syncing_selection = False
+
+                def toggle_all_quasi_identifiers() -> None:
+                    nonlocal syncing_selection
+                    if syncing_selection:
+                        return
+                    syncing_selection = True
+                    available = _eligible_quasi_identifiers(
+                        self.state.columns,
+                        sensitive.value,
+                        self.state.identifier_column,
+                    )
+                    selected = available if select_all.value else []
+                    self.state.privacy_quasi_identifiers = list(selected)
+                    qi.set_value(selected)
+                    syncing_selection = False
+
+                def sync_select_all_checkbox() -> None:
+                    nonlocal syncing_selection
+                    if syncing_selection:
+                        return
+                    syncing_selection = True
+                    available = _eligible_quasi_identifiers(
+                        self.state.columns,
+                        sensitive.value,
+                        self.state.identifier_column,
+                    )
+                    self.state.privacy_quasi_identifiers = list(qi.value or [])
+                    select_all.set_value(
+                        bool(available) and set(qi.value or []) == set(available)
+                    )
+                    syncing_selection = False
+
+                sensitive.on_value_change(lambda _: sync_sensitive_attribute())
+                select_all.on_value_change(lambda _: toggle_all_quasi_identifiers())
+                qi.on_value_change(lambda _: sync_select_all_checkbox())
                 privacy_button = ui.button(
                     "Calculate privacy metrics",
                     icon="shield",
@@ -366,9 +587,16 @@ class BrowserWorkspace:
 
             with ui.card().classes("mp-panel w-full p-5"):
                 _section("Variable contribution", "Rank individual or combined quasi-identifiers.")
-                contribution_qi = ui.select(
-                    self.state.columns, label="Quasi-identifiers", multiple=True
-                ).props("use-chips").classes("w-full")
+                contribution_options = _eligible_quasi_identifiers(
+                    self.state.columns,
+                    self.state.sensitive_attribute,
+                    self.state.identifier_column,
+                )
+                contribution_qi, _ = _multi_select_with_select_all(
+                    contribution_options,
+                    label="Quasi-identifiers",
+                    test_id="contribution-quasi-identifiers",
+                )
                 with ui.row().classes("items-end gap-3"):
                     minimum = ui.number("Minimum combination", value=3, min=1, step=1)
                     maximum = ui.number("Maximum combination", value=7, min=1, step=1)
@@ -421,14 +649,108 @@ class BrowserWorkspace:
         except Exception as error:
             self._notify_error(error)
 
+    def _apply_binning(
+        self,
+        column: str | None,
+        method: str,
+        bin_count: float | None,
+        bin_width: float | None,
+    ) -> None:
+        if not column:
+            self._notify_error(ValueError("Choose a numeric column to bin."))
+            return
+
+        def operation() -> pd.DataFrame:
+            transformed = bin_numeric_values(
+                self._require_data(),
+                column,
+                bins=bin_count if method == "bins" else None,
+                width=float(bin_width) if method == "width" and bin_width is not None else None,
+            )
+            self.state.column_roles[column] = "Categorical"
+            return transformed
+
+        self._apply_transform(operation, f"Binned {column} into intervals.")
+
+    def _apply_pseudonymization(self, identifier_column: str | None) -> None:
+        if not identifier_column:
+            self._notify_error(ValueError("Choose the identifier column."))
+            return
+        if self.state.identifier_key is not None:
+            self._notify_error(
+                ValueError("Replacement IDs have already been generated for this dataset.")
+            )
+            return
+
+        def operation() -> pd.DataFrame:
+            result = pseudonymize_identifiers(
+                self._require_data(), identifier_column
+            )
+            if self.state.original is None or len(self.state.original) != len(result.data):
+                raise ValueError("The original working copy is not aligned with the dataset.")
+            aligned_original = self.state.original.iloc[
+                list(result.row_order)
+            ].reset_index(drop=True)
+            aligned_original[identifier_column] = result.data[
+                identifier_column
+            ].copy()
+            self.state.original = aligned_original
+            self.state.identifier_key = result.key
+            self.state.identifier_column = identifier_column
+            self.state.column_roles[identifier_column] = "Categorical"
+            return result.data
+
+        self._apply_transform(
+            operation,
+            f"Generated replacement IDs and shuffled rows using {identifier_column}.",
+        )
+
     @ui.refreshable
     def transform_panel(self) -> None:
         with context.slot:
             with ui.card().classes("mp-panel w-full p-5"):
+                _section(
+                    "Replace direct identifiers",
+                    "Generate same-length alphanumeric IDs and randomly reorder the working rows.",
+                )
+                identifier = ui.select(
+                    self.state.columns,
+                    label="Identifier column",
+                    value=self.state.identifier_column,
+                    clearable=True,
+                ).classes("w-full")
+                identifier.on_value_change(
+                    lambda event: self.set_identifier_column(event.value)
+                )
+                ui.label(
+                    "The identifier key can reverse this step. Export it separately and protect it as sensitive data."
+                ).classes("text-sm text-amber-800")
+                with ui.row().classes("w-full items-center gap-3"):
+                    generate_ids = ui.button(
+                        "Generate new IDs and shuffle rows",
+                        icon="shuffle",
+                        on_click=lambda: self._apply_pseudonymization(identifier.value),
+                    ).props("unelevated color=teal-8")
+                    if self.state.identifier_key is not None:
+                        identifier.disable()
+                        generate_ids.disable()
+                        ui.button(
+                            "Download identifier key",
+                            icon="key",
+                            on_click=lambda: _download_frame(
+                                self.state.identifier_key,
+                                "metaprivBIDS_identifier_key.csv",
+                            ),
+                        ).props("outline color=deep-orange-8")
+                        ui.label(
+                            f"Rows shuffled and {self.state.identifier_column} replaced."
+                        ).classes("text-sm text-teal-800")
+
+            with ui.card().classes("mp-panel w-full p-5"):
                 _section("Numeric transformations", "Apply one reversible operation to the working copy.")
                 numeric = ui.select(self.state.numeric_columns, label="Numeric column").classes("w-full")
                 with ui.row().classes("w-full items-end gap-3"):
-                    exponent = ui.number("Power of ten", value=1, min=0, step=1)
+                    exponent = ui.number("Round to nearest", value=1, min=0, step=1)
                     rounding_mode = ui.select(
                         ["nearest", "up", "down"], value="nearest", label="Rounding mode"
                     )
@@ -468,6 +790,73 @@ class BrowserWorkspace:
                             f"Added {distribution.value} noise to {numeric.value}.",
                         ),
                     ).props("unelevated color=teal-8")
+
+            with ui.card().classes("mp-panel w-full p-5"):
+                _section(
+                    "Bin numeric values",
+                    "Replace exact values with equal-width interval labels.",
+                )
+                bin_column = ui.select(
+                    self.state.numeric_columns, label="Numeric column"
+                ).classes("w-full")
+                bin_method = ui.toggle(
+                    {"bins": "Number of bins", "width": "Fixed bin width"},
+                    value="bins",
+                ).props("spread no-caps color=teal-8").classes("w-full")
+                with ui.row().classes("w-full items-end gap-3"):
+                    bin_count = ui.number(
+                        "Number of equal-width bins", value=5, min=2, step=1
+                    )
+                    bin_width = ui.number(
+                        "Fixed bin width", value=10, min=0.000001
+                    )
+                    bin_width.set_visibility(False)
+                    ui.button(
+                        "Apply binning",
+                        icon="view_column",
+                        on_click=lambda: self._apply_binning(
+                            bin_column.value,
+                            bin_method.value,
+                            bin_count.value,
+                            bin_width.value,
+                        ),
+                    ).props("unelevated color=teal-8")
+                preview = ui.label(
+                    "Choose a numeric column to preview the intervals."
+                ).classes("mp-muted text-sm")
+
+                def update_binning_controls() -> None:
+                    use_count = bin_method.value == "bins"
+                    bin_count.set_visibility(use_count)
+                    bin_width.set_visibility(not use_count)
+                    data = self.state.data
+                    column = bin_column.value
+                    if data is None or not column:
+                        preview.set_text("Choose a numeric column to preview the intervals.")
+                        return
+                    try:
+                        transformed = bin_numeric_values(
+                            data,
+                            column,
+                            bins=bin_count.value if use_count else None,
+                            width=float(bin_width.value) if not use_count else None,
+                        )
+                        binned = transformed[column]
+                        intervals = (
+                            binned.cat.categories.astype(str).tolist()
+                            if isinstance(binned.dtype, pd.CategoricalDtype)
+                            else binned.dropna().astype(str).unique().tolist()
+                        )
+                        shown = ", ".join(intervals[:6])
+                        suffix = " …" if len(intervals) > 6 else ""
+                        preview.set_text(f"Intervals: {shown}{suffix}")
+                    except (TypeError, ValueError) as error:
+                        preview.set_text(str(error))
+
+                bin_method.on_value_change(lambda _: update_binning_controls())
+                bin_column.on_value_change(lambda _: update_binning_controls())
+                bin_count.on_value_change(lambda _: update_binning_controls())
+                bin_width.on_value_change(lambda _: update_binning_controls())
 
             with ui.card().classes("mp-panel w-full p-5"):
                 _section("Categorical generalisation", "Combine values under a new, broader label.")
@@ -579,9 +968,15 @@ class BrowserWorkspace:
         with context.slot:
             with ui.card().classes("mp-panel w-full p-5"):
                 _section("PIF and information gain", "Compute cell (CIG), row (RIG), and percentile risk.")
-                selected = ui.select(
-                    self.state.columns, label="Variables", multiple=True
-                ).props("use-chips").classes("w-full")
+                selected, _ = _multi_select_with_select_all(
+                    _eligible_quasi_identifiers(
+                        self.state.columns,
+                        self.state.sensitive_attribute,
+                        self.state.identifier_column,
+                    ),
+                    label="Variables",
+                    test_id="pif-quasi-identifiers",
+                )
                 with ui.row().classes("w-full items-end gap-3"):
                     percentile = ui.number("PIF percentile", value=95, min=0, max=100)
                     mask = ui.input("Mask value (optional; use nan for missing)")
@@ -630,8 +1025,7 @@ class BrowserWorkspace:
                     ui.plotly(figure).classes("w-full")
                 with ui.card().classes("mp-panel grow p-5"):
                     _section("RIG outliers", "Two-sided robust MAD rule (threshold 2.2414).")
-                    figure = go.Figure(go.Box(y=result.values["RIG"], name="RIG", boxpoints="outliers"))
-                    figure.update_layout(margin=dict(l=30, r=10, t=10, b=30), height=430)
+                    figure = _rig_outlier_figure(result.values["RIG"])
                     ui.plotly(figure).classes("w-full")
                     ui.button(
                         "Export outliers",
@@ -667,9 +1061,15 @@ class BrowserWorkspace:
         with context.slot:
             with ui.card().classes("mp-panel w-full p-5"):
                 _section("SUDA2", "Identify risky records and attribute contributions with sdcMicro.")
-                selected = ui.select(
-                    self.state.columns, label="Variables", multiple=True
-                ).props("use-chips").classes("w-full")
+                selected, _ = _multi_select_with_select_all(
+                    _eligible_quasi_identifiers(
+                        self.state.columns,
+                        self.state.sensitive_attribute,
+                        self.state.identifier_column,
+                    ),
+                    label="Variables",
+                    test_id="suda-quasi-identifiers",
+                )
                 with ui.row().classes("w-full items-end gap-3"):
                     fraction = ui.number("Sampling fraction", value=0.2, min=0, max=1, step=0.05)
                     missing = ui.number("Missing-value code (optional)", value=None)
@@ -710,10 +1110,9 @@ class BrowserWorkspace:
             with ui.row().classes("w-full gap-5"):
                 with ui.card().classes("mp-panel grow p-5"):
                     _section("Disclosure score", "Distribution and box-plot outliers.")
-                    figure = go.Figure(go.Box(
-                        y=result.data_with_scores["dis-score"], name="dis-score", boxpoints="outliers"
-                    ))
-                    figure.update_layout(margin=dict(l=30, r=10, t=10, b=30), height=400)
+                    figure = _disclosure_score_outlier_figure(
+                        result.data_with_scores["dis-score"]
+                    )
                     ui.plotly(figure).classes("w-full")
                     ui.button(
                         "Export outliers",

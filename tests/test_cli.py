@@ -11,6 +11,7 @@ def input_file(tmp_path):
     path = tmp_path / "input.csv"
     pd.DataFrame(
         {
+            "ID": [101, 202, 303, 404, 505],
             "age": [25.5, 35.5, 45.5, 25.5, 35.5],
             "city": ["A", "B", "A", "C", "B"],
             "diagnosis": ["x", "x", "y", "z", "y"],
@@ -22,7 +23,7 @@ def input_file(tmp_path):
 def test_inspect_and_privacy_commands(input_file, tmp_path, capsys):
     profile = tmp_path / "profile.csv"
     assert main(["inspect", str(input_file), "--output", str(profile)]) == 0
-    assert set(pd.read_csv(profile)["column"]) == {"age", "city", "diagnosis"}
+    assert set(pd.read_csv(profile)["column"]) == {"ID", "age", "city", "diagnosis"}
     assert main([
         "privacy", str(input_file), "--columns", "age,city", "--sensitive", "diagnosis"
     ]) == 0
@@ -35,6 +36,8 @@ def test_inspect_and_privacy_commands(input_file, tmp_path, capsys):
     ("arguments", "column"),
     [
         (["round", "--column", "age", "--exponent", "1"], "age"),
+        (["bin", "--column", "age", "--bins", "3"], "age"),
+        (["bin", "--column", "age", "--width", "10"], "age"),
         (["remove-decimals", "--column", "age"], "age"),
         (["noise", "--column", "age", "--distribution", "gaussian", "--seed", "4"], "age"),
         (["combine", "--column", "city", "--values", "A,B", "--replacement", "Large"], "city"),
@@ -61,3 +64,23 @@ def test_k_commands(input_file, tmp_path):
     ]) == 0
     assert not pd.read_csv(global_output).empty
     assert len(pd.read_csv(combined_output)) == 3
+
+
+def test_pseudonymize_command_exports_released_data_and_key(input_file, tmp_path):
+    output = tmp_path / "released.csv"
+    key_output = tmp_path / "identifier_key.csv"
+
+    assert main([
+        "pseudonymize", str(input_file), "--id-column", "ID",
+        "--output", str(output), "--key-output", str(key_output),
+    ]) == 0
+
+    released = pd.read_csv(output)
+    key = pd.read_csv(key_output)
+    assert released["ID"].str.fullmatch(r"[A-Za-z0-9]{3}").all()
+    assert released["ID"].is_unique
+    assert list(key.columns) == ["ID_original", "ID_replacement"]
+    restored_ids = released.merge(
+        key, left_on="ID", right_on="ID_replacement", validate="one_to_one"
+    )["ID_original"].tolist()
+    assert restored_ids != [101, 202, 303, 404, 505]

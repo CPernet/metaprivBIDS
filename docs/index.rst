@@ -13,7 +13,8 @@ Risk assessment includes:
   information gain (RIG); and
 - SUDA2 through the R ``sdcMicro`` package.
 
-Mitigation includes rounding, decimal removal, Laplacian or Gaussian noise,
+Mitigation includes direct-identifier pseudonymisation with row shuffling,
+equal-width binning, rounding, decimal removal, Laplacian or Gaussian noise,
 categorical generalisation, and per-column reversion.
 
 .. toctree::

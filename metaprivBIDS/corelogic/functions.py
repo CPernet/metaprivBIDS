@@ -13,6 +13,8 @@ import json
 import math
 import os
 from pathlib import Path
+import random
+import string
 from typing import Any, Iterable, Literal, Sequence
 
 import numpy as np
@@ -40,6 +42,16 @@ class SudaResult:
     contribution_percent: pd.DataFrame
     attribute_contributions: pd.DataFrame
     attribute_level_contributions: pd.DataFrame
+
+
+@dataclass(frozen=True)
+class PseudonymizationResult:
+    """A shuffled working copy, its separate identifier key, and row order."""
+
+    data: pd.DataFrame
+    key: pd.DataFrame
+    row_order: tuple[int, ...]
+    identifier_column: str
 
 
 def _require_columns(data: pd.DataFrame, columns: Sequence[str]) -> list[str]:
@@ -215,6 +227,167 @@ def round_values(
     result = data.copy()
     result[column_name] = rounded * factor
     return result
+
+
+def _format_bin_edge(value: float) -> str:
+    if math.isclose(value, 0.0, abs_tol=1e-12):
+        value = 0.0
+    return f"{value:.12g}"
+
+
+def bin_numeric_values(
+    data: pd.DataFrame,
+    column_name: str,
+    *,
+    bins: int | None = None,
+    width: float | None = None,
+) -> pd.DataFrame:
+    """Replace numeric values with equal-width interval labels.
+
+    Exactly one of ``bins`` (a requested number of intervals across the
+    observed range) or ``width`` (interval size aligned to its multiples) must
+    be supplied. Missing values remain missing and the input is not mutated.
+    """
+
+    _require_columns(data, [column_name])
+    if (bins is None) == (width is None):
+        raise ValueError("Provide exactly one of bins or width.")
+    if bins is not None:
+        try:
+            numeric_bins = float(bins)
+        except (TypeError, ValueError) as error:
+            raise ValueError("bins must be an integer of at least 2.") from error
+        if (
+            isinstance(bins, bool)
+            or not math.isfinite(numeric_bins)
+            or not numeric_bins.is_integer()
+            or numeric_bins < 2
+        ):
+            raise ValueError("bins must be an integer of at least 2.")
+        bins = int(numeric_bins)
+    if width is not None:
+        try:
+            width = float(width)
+        except (TypeError, ValueError) as error:
+            raise ValueError("width must be a positive finite number.") from error
+        if not math.isfinite(width) or width <= 0:
+            raise ValueError("width must be a positive finite number.")
+
+    numeric = pd.to_numeric(data[column_name], errors="raise")
+    observed = numeric.dropna()
+    result = data.copy()
+    if observed.empty:
+        result[column_name] = pd.Series(pd.NA, index=data.index, dtype="string")
+        return result
+
+    minimum = float(observed.min())
+    maximum = float(observed.max())
+    if minimum == maximum:
+        label = f"[{_format_bin_edge(minimum)}, {_format_bin_edge(maximum)}]"
+        result[column_name] = numeric.map(lambda value: pd.NA if pd.isna(value) else label).astype("string")
+        return result
+
+    if bins is not None:
+        edges = np.linspace(minimum, maximum, bins + 1, dtype=float)
+    else:
+        bin_width = float(width)
+        lower = math.floor(minimum / bin_width) * bin_width
+        interval_count = max(1, math.ceil((maximum - lower) / bin_width))
+        if lower + interval_count * bin_width <= maximum:
+            interval_count += 1
+        edges = lower + np.arange(interval_count + 1, dtype=float) * bin_width
+
+    cut_edges = edges.copy()
+    cut_edges[-1] = np.nextafter(cut_edges[-1], math.inf)
+    labels = [
+        f"[{_format_bin_edge(left)}, {_format_bin_edge(right)}{']' if index == len(edges) - 2 else ')'}"
+        for index, (left, right) in enumerate(zip(edges[:-1], edges[1:]))
+    ]
+    result[column_name] = pd.cut(
+        numeric,
+        bins=cut_edges,
+        labels=labels,
+        right=False,
+        include_lowest=True,
+        ordered=True,
+    )
+    return result
+
+
+def pseudonymize_identifiers(
+    data: pd.DataFrame,
+    identifier_column: str,
+    *,
+    seed: int | None = None,
+) -> PseudonymizationResult:
+    """Replace IDs with same-length alphanumeric values and reorder rows.
+
+    System randomness is used by default. ``seed`` exists for deterministic
+    tests and reproducible demonstrations; production callers should omit it.
+    """
+
+    _require_columns(data, [identifier_column])
+    if data.empty:
+        raise ValueError("Cannot generate identifiers for an empty dataset.")
+    original_ids = data[identifier_column]
+    if original_ids.isna().any() or original_ids.astype(str).str.strip().eq("").any():
+        raise ValueError("The identifier column must not contain missing or blank values.")
+    if original_ids.duplicated().any():
+        raise ValueError("The identifier column must contain unique values.")
+
+    generator = random.SystemRandom() if seed is None else random.Random(seed)
+    text_ids = original_ids.astype(str).tolist()
+    existing_text = set(text_ids)
+    generated_text: set[str] = set()
+    replacements = [""] * len(text_ids)
+    alphabet = string.ascii_letters + string.digits
+    alphabet_set = set(alphabet)
+    groups: dict[int, list[int]] = {}
+    for index, value in enumerate(text_ids):
+        groups.setdefault(len(value), []).append(index)
+
+    for length, indices in groups.items():
+        occupied = sum(
+            1
+            for value in existing_text
+            if len(value) == length and set(value) <= alphabet_set
+        )
+        if len(alphabet) ** length - occupied < len(indices):
+            raise ValueError(
+                f"Not enough unused {length}-character IDs are available. "
+                "Use longer source identifiers."
+            )
+        for index in indices:
+            while True:
+                candidate = "".join(generator.choice(alphabet) for _ in range(length))
+                if candidate in existing_text or candidate in generated_text:
+                    continue
+                generated_text.add(candidate)
+                replacements[index] = candidate
+                break
+
+    transformed = data.copy()
+    transformed[identifier_column] = replacements
+    row_order = list(range(len(transformed)))
+    generator.shuffle(row_order)
+    if len(row_order) > 1 and row_order == list(range(len(row_order))):
+        row_order = row_order[1:] + row_order[:1]
+    transformed = transformed.iloc[row_order].reset_index(drop=True)
+
+    original_name = f"{identifier_column}_original"
+    replacement_name = f"{identifier_column}_replacement"
+    key = pd.DataFrame(
+        {
+            original_name: original_ids.to_numpy(copy=True),
+            replacement_name: replacements,
+        }
+    ).sort_values(replacement_name, ignore_index=True)
+    return PseudonymizationResult(
+        data=transformed,
+        key=key,
+        row_order=tuple(row_order),
+        identifier_column=identifier_column,
+    )
 
 
 def remove_decimals(data: pd.DataFrame, column_name: str) -> pd.DataFrame:

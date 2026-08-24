@@ -47,6 +47,10 @@ notebook = [
     "jupyterlab>=4.0,<5",
 ]
 
+screenshots = [
+    "playwright>=1.50,<2",
+]
+
 # Test dependencies
 test = [
     "pytest>=8.0",

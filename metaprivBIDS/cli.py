@@ -12,6 +12,7 @@ import pandas as pd
 
 from .corelogic import (
     add_noise,
+    bin_numeric_values,
     calculate_k_combined,
     calculate_k_global,
     calculate_mad_outliers,
@@ -22,6 +23,7 @@ from .corelogic import (
     load_json_metadata,
     load_tabular_data,
     profile_columns,
+    pseudonymize_identifiers,
     remove_decimals,
     round_values,
     summarize_cig,
@@ -96,6 +98,23 @@ def build_parser() -> argparse.ArgumentParser:
     rounding.add_argument("--mode", choices=["nearest", "up", "down"], default="nearest")
     rounding.add_argument("--output", required=True)
 
+    binning = subcommands.add_parser("bin", help="Bin one numeric column into intervals.")
+    binning.add_argument("input")
+    binning.add_argument("--column", required=True)
+    binning_method = binning.add_mutually_exclusive_group(required=True)
+    binning_method.add_argument("--bins", type=int, help="Number of equal-width bins.")
+    binning_method.add_argument("--width", type=float, help="Fixed bin width.")
+    binning.add_argument("--output", required=True)
+
+    pseudonymize = subcommands.add_parser(
+        "pseudonymize",
+        help="Replace direct identifiers, shuffle rows, and export a separate key.",
+    )
+    pseudonymize.add_argument("input")
+    pseudonymize.add_argument("--id-column", required=True)
+    pseudonymize.add_argument("--output", required=True)
+    pseudonymize.add_argument("--key-output", required=True)
+
     truncate = subcommands.add_parser("remove-decimals", help="Truncate decimals in one column.")
     truncate.add_argument("input")
     truncate.add_argument("--column", required=True)
@@ -165,6 +184,16 @@ def run(args: argparse.Namespace) -> int:
         )
     elif args.command == "round":
         _save_transformed(round_values(data, args.column, args.exponent, args.mode), args.output)
+    elif args.command == "bin":
+        _save_transformed(
+            bin_numeric_values(data, args.column, bins=args.bins, width=args.width),
+            args.output,
+        )
+    elif args.command == "pseudonymize":
+        result = pseudonymize_identifiers(data, args.id_column)
+        _save_transformed(result.data, args.output)
+        result.key.to_csv(args.key_output, index=False)
+        print(f"Saved sensitive identifier key {args.key_output}")
     elif args.command == "remove-decimals":
         _save_transformed(remove_decimals(data, args.column), args.output)
     elif args.command == "noise":

@@ -24,7 +24,7 @@ sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 project = 'metaprivBIDS'
-copyright = '2024, Emilie B. Kibsgaard'
+copyright = '2024–2026, Emilie B. Kibsgaard'
 author = 'Emilie B. Kibsgaard'
 release = '0.2.0'
 

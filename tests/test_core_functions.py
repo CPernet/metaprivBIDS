@@ -7,6 +7,7 @@ import pytest
 from metaprivBIDS.corelogic import (
     add_gaussian_noise,
     add_laplacian_noise,
+    bin_numeric_values,
     calculate_k_combined,
     calculate_k_global,
     calculate_l_diversity,
@@ -19,6 +20,7 @@ from metaprivBIDS.corelogic import (
     load_tabular_data,
     metaprivBIDS_core_logic,
     profile_columns,
+    pseudonymize_identifiers,
     remove_decimals,
     revert_column,
     round_values,
@@ -96,6 +98,88 @@ def test_rounding_modes(data, mode, expected):
     result = round_values(data, "age", exponent=1, mode=mode)
     assert result["age"].tolist() == expected
     assert data["age"].tolist() == [25, 35, 45, 25, 35, 52]
+
+
+def test_bin_numeric_values_by_count_is_non_mutating(data):
+    result = bin_numeric_values(data, "age", bins=3)
+
+    assert result["age"].astype("string").tolist() == [
+        "[25, 34)", "[34, 43)", "[43, 52]", "[25, 34)", "[34, 43)", "[43, 52]"
+    ]
+    assert data["age"].tolist() == [25, 35, 45, 25, 35, 52]
+
+
+def test_bin_numeric_values_by_width_aligns_clean_boundaries():
+    data = pd.DataFrame({"value": [-5.0, -0.1, 0.0, 4.9, 5.0, np.nan]})
+
+    result = bin_numeric_values(data, "value", width=5)
+
+    assert result["value"].astype("string").tolist()[:-1] == [
+        "[-5, 0)", "[-5, 0)", "[0, 5)", "[0, 5)", "[5, 10]"
+    ]
+    assert pd.isna(result["value"].iloc[-1])
+
+
+def test_bin_numeric_values_handles_constant_and_rejects_invalid_configuration():
+    constant = pd.DataFrame({"value": [4.5, 4.5, np.nan]})
+    result = bin_numeric_values(constant, "value", bins=4)
+    assert result["value"].astype("string").tolist()[:2] == ["[4.5, 4.5]", "[4.5, 4.5]"]
+    assert pd.isna(result["value"].iloc[-1])
+
+    with pytest.raises(ValueError, match="exactly one"):
+        bin_numeric_values(constant, "value")
+    with pytest.raises(ValueError, match="exactly one"):
+        bin_numeric_values(constant, "value", bins=3, width=2)
+    with pytest.raises(ValueError, match="at least 2"):
+        bin_numeric_values(constant, "value", bins=1)
+    with pytest.raises(ValueError, match="positive finite"):
+        bin_numeric_values(constant, "value", width=0)
+
+
+def test_pseudonymize_identifiers_creates_key_and_shuffles_rows():
+    data = pd.DataFrame(
+        {
+            "ID": [101, 202, 303, 404],
+            "age": [21, 35, 48, 62],
+            "group": ["A", "B", "C", "D"],
+        }
+    )
+
+    result = pseudonymize_identifiers(data, "ID", seed=17)
+
+    assert data["ID"].tolist() == [101, 202, 303, 404]
+    assert result.data.index.tolist() == [0, 1, 2, 3]
+    assert result.row_order != (0, 1, 2, 3)
+    assert result.data["ID"].str.fullmatch(r"[A-Za-z0-9]{3}").all()
+    assert result.data["ID"].is_unique
+    assert set(result.data["ID"]).isdisjoint({"101", "202", "303", "404"})
+    assert list(result.key.columns) == ["ID_original", "ID_replacement"]
+
+    reconstructed = result.data.merge(
+        result.key,
+        left_on="ID",
+        right_on="ID_replacement",
+        validate="one_to_one",
+    ).sort_values("ID_original")
+    assert reconstructed["age"].tolist() == [21, 35, 48, 62]
+
+
+def test_pseudonymize_identifiers_requires_complete_unique_ids():
+    with pytest.raises(ValueError, match="unique"):
+        pseudonymize_identifiers(pd.DataFrame({"ID": [101, 101]}), "ID")
+    with pytest.raises(ValueError, match="missing or blank"):
+        pseudonymize_identifiers(pd.DataFrame({"ID": [101, None]}), "ID")
+
+
+def test_pseudonymize_identifiers_preserves_each_character_length():
+    data = pd.DataFrame({"ID": ["A1", "person7", "XYZ9"], "value": [1, 2, 3]})
+
+    result = pseudonymize_identifiers(data, "ID", seed=8)
+    key = result.key.set_index("ID_original")["ID_replacement"]
+
+    assert all(len(key[original]) == len(original) for original in data["ID"])
+    assert key.str.fullmatch(r"[A-Za-z0-9]+").all()
+    assert set(key).isdisjoint(set(data["ID"]))
 
 
 def test_remove_decimals():
