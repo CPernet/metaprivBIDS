@@ -198,6 +198,25 @@ conda run --name metaprivbids uv pip install -e ".[screenshots]"
 conda run --name metaprivbids python scripts/capture_docs_screenshots.py
 ```
 
+## Building the documentation
+
+The documentation uses Sphinx with the Read the Docs theme and MyST for
+Markdown pages. From the repository root, install the documentation extra
+and build the HTML pages:
+
+```console
+conda run --name metaprivbids uv pip install -e ".[docs]"
+conda run --name metaprivbids python -m sphinx -b html --fail-on-warning --keep-going docs docs/_build/html
+```
+
+Open `docs/_build/html/index.html` to preview the result.
+
+Read the Docs uses `.readthedocs.yaml` to install `.[docs]` with Python 3.12
+and build these same sources. The required `sphinx.configuration` setting
+explicitly points to `docs/conf.py`; Read the Docs no longer discovers this
+file automatically. See the
+[Read the Docs configuration announcement](https://about.readthedocs.com/blog/2024/12/deprecate-config-files-without-sphinx-or-mkdocs-config/).
+
 ## Methods
 
 - k-anonymity and l-diversity
