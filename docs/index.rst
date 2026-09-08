@@ -22,6 +22,7 @@ categorical generalisation, and per-column reversion.
    :caption: Contents
 
    getting_started
+   understand_metrics
    cli
    examples
    functionality
