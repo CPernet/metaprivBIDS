@@ -77,39 +77,62 @@ information disclosure. These k and l results agree with Table 2.
 
 ## K-global: contribution of one variable
 
-The implementation removes each quasi-identifier in turn and counts how many
-sample-unique rows disappear, divided by that variable's distinct-value count:
+K-global follows Equation 1 of the paper: remove each quasi-identifier and
+count the decrease in **distinct combinations**, divided by that variable's
+distinct non-missing value count.
 
 ```{math}
 K_i = \frac{U(Q) - U(Q \setminus \{i\})}{V_i}
 ```
 
-Here, {math}`U` counts rows occurring **exactly once**, and {math}`V_i` counts distinct
-non-missing values in column $i$. The application rounds to one decimal place.
-Higher values indicate a larger reduction in sample uniqueness upon removal.
+Here, {math}`U(A)` counts distinct combinations of the columns in {math}`A`,
+regardless of how many participants share them. It does not count only
+singletons. Higher values indicate a larger reduction in distinct combinations
+upon removal. The application rounds K-global to one decimal place.
 
-For A, removing sex leaves only Rural unique, so its score is {math}`(2-1)/2=0.5`.
-Removing area leaves only Female unique, giving {math}`(2-1)/3`, displayed as 0.3.
+A and B each contain four distinct sex/area combinations, three areas, and
+two sex values. Thus sex contributes {math}`(4-3)/2=0.5`, and area contributes
+{math}`(4-2)/3`, displayed as 0.7 (0.67 in the paper).
+
+C contains three combinations, each shared by two people. Removing either
+variable leaves two distinct values, giving {math}`(3-2)/2=0.5` for both.
+The absence of singleton records therefore does not imply zero K-global.
 
 | K-global source | A: sex / area | B: sex / area | C: sex / area |
 | --- | --- | --- | --- |
 | Published Table 2 | 0.5 / 0.67 | 0.5 / 0.67 | 0.5 / 0.5 |
-| Current application | 0.5 / 0.3 | 0.0 / 0.7 | 0.0 / 0.0 |
-
-**The published K-global values are not all reproduced by the current
-sample-unique calculation.** The application row above was computed from the
-displayed data with only sex and area selected. In C there are no sample-unique
-rows to remove, so both scores are zero. A zero score does not establish that
-a variable carries no sensitive information.
+| Application (one decimal) | 0.5 / 0.7 | 0.5 / 0.7 | 0.5 / 0.5 |
 
 ## K-combined: contribution of several variables
 
-K-combined examines selected subsets of quasi-identifiers. It reports their
-sample-unique counts and the counts after excluding those columns. Its score
-is the decrease from the full selection's unique count, divided by the
-subset's unique count. For the sex/area pair in A, this is {math}`(2-0)/2=1`.
-In C the denominator is zero, so the score is undefined (`NaN`). This is an
-additional application feature, not a metric reported in Table 2.
+K-combined applies the same distinct-combination logic to a subset of
+quasi-identifiers {math}`C`:
+
+```{math}
+K_C = \frac{U(Q) - U(Q \setminus C)}{U(C)}
+```
+
+It reports the subset's distinct-combination count, the count after excluding
+that subset, and the score. For complete data, a one-variable subset gives
+the same value as K-global before rounding. This is an additional application
+feature, not a metric reported in Table 2.
+
+For C's full sex/area pair, the subset has three distinct combinations.
+Removing both columns leaves one empty combination shared by all six rows,
+so the score is {math}`(3-1)/3`, approximately 0.667. For A and B, the full-pair
+score is {math}`(4-1)/4=0.75`.
+
+**Counting conventions:** for a nonempty dataset, selecting no remaining
+columns gives one empty combination; an empty dataset has zero combinations.
+Missing values participate in combination counts. K-global excludes missing
+values from its per-variable denominator, whereas K-combined includes them
+in its subset denominator. A zero denominator produces `NaN`.
+
+The exported column names `unique_rows_after_removal`, `unique_rows`, and
+`unique_rows_excluding_columns` are retained for compatibility and now denote
+distinct combinations. Earlier versions counted only singletons in K-global
+and K-combined; recalculating may change their results. The privacy summary's
+sample-unique count, k-anonymity, and l-diversity retain their original meanings.
 
 ## SUDA2: minimal combinations that single someone out
 

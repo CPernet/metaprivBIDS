@@ -141,17 +141,28 @@ def calculate_privacy_metrics(
     }
 
 
+def _distinct_combination_count(data: pd.DataFrame, columns: Sequence[str]) -> int:
+    """Count observed combinations, including missing values and the empty tuple."""
+    if not columns:
+        return int(len(data) > 0)
+    return len(data[list(columns)].drop_duplicates())
+
+
 def calculate_k_global(data: pd.DataFrame, selected_columns: Sequence[str]) -> pd.DataFrame:
-    """Measure each quasi-identifier's effect on the sample-unique row count."""
+    """Measure each variable's effect on the number of distinct combinations.
+
+    Divide the decrease after removal by the number of distinct non-missing
+    values of that variable, rounded to one decimal place. The legacy output
+    name ``unique_rows_after_removal`` refers to distinct combinations, not
+    singleton records. Missing values participate in combination counts.
+    """
 
     selected = _require_columns(data, selected_columns)
-    all_unique_count = int((data[selected].value_counts(dropna=False) == 1).sum())
+    all_unique_count = _distinct_combination_count(data, selected)
     rows: list[dict[str, Any]] = []
     for column in selected:
         remaining = [candidate for candidate in selected if candidate != column]
-        after_removal = (
-            int((data[remaining].value_counts(dropna=False) == 1).sum()) if remaining else 0
-        )
+        after_removal = _distinct_combination_count(data, remaining)
         difference = all_unique_count - after_removal
         unique_values = int(data[column].nunique(dropna=True))
         normalized = round(difference / unique_values, 1) if unique_values else np.nan
@@ -174,25 +185,27 @@ def calculate_k_combined(
     min_size: int = 3,
     max_size: int = 7,
 ) -> pd.DataFrame:
-    """Evaluate sample uniqueness for combinations of quasi-identifiers."""
+    """Measure the effect of removing subsets using distinct combinations.
+
+    The score is the decrease in full-selection combinations after removing
+    a subset, divided by that subset's distinct-combination count. Legacy
+    ``unique_rows`` output names refer to distinct combinations, not singletons.
+    Missing values participate in all combination counts.
+    """
 
     selected = _require_columns(data, selected_columns)
     if min_size < 1 or max_size < min_size or max_size > len(selected):
         raise ValueError(
             f"Combination sizes must satisfy 1 <= min_size <= max_size <= {len(selected)}."
         )
-    total_unique = int((data[selected].value_counts(dropna=False) == 1).sum())
+    total_unique = _distinct_combination_count(data, selected)
     rows: list[dict[str, Any]] = []
     for size in range(min_size, max_size + 1):
         for combination in combinations(selected, size):
             combination_columns = list(combination)
-            unique_rows = int(
-                (data[combination_columns].value_counts(dropna=False) == 1).sum()
-            )
+            unique_rows = _distinct_combination_count(data, combination_columns)
             remaining = [column for column in selected if column not in combination_columns]
-            excluded_unique = (
-                int((data[remaining].value_counts(dropna=False) == 1).sum()) if remaining else 0
-            )
+            excluded_unique = _distinct_combination_count(data, remaining)
             score = (
                 (total_unique - excluded_unique) / unique_rows if unique_rows else np.nan
             )

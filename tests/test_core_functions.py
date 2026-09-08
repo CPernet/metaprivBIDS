@@ -74,6 +74,52 @@ def test_privacy_metrics_and_l_diversity(data):
         calculate_l_diversity(data, ["age", "diagnosis"], "diagnosis")
 
 
+@pytest.mark.parametrize(
+    ("pairs", "expected_global", "expected_combined"),
+    [
+        ([('F', 'City'), ('M', 'Suburb'), ('M', 'Rural'), ('M', 'Suburb'),
+          ('M', 'City'), ('M', 'City')], [0.5, 0.7], [0.5, 2 / 3, 0.75]),
+        ([('F', 'City'), ('F', 'City'), ('M', 'Rural'), ('M', 'Suburb'),
+          ('M', 'City'), ('M', 'City')], [0.5, 0.7], [0.5, 2 / 3, 0.75]),
+        ([('F', 'City'), ('F', 'City'), ('M', 'Rural'), ('M', 'Rural'),
+          ('M', 'City'), ('M', 'City')], [0.5, 0.5], [0.5, 0.5, 2 / 3]),
+    ],
+    ids=['table2-A', 'table2-B', 'table2-C'],
+)
+def test_contribution_counts_distinct_combinations(pairs, expected_global, expected_combined):
+    frame = pd.DataFrame(pairs, columns=['sex', 'area'])
+    result = calculate_k_global(frame, ['sex', 'area']).set_index('column')
+    assert result.loc[['sex', 'area'], 'normalized_difference'].tolist() == expected_global
+    combined = calculate_k_combined(frame, ['sex', 'area'], 1, 2)
+    assert combined['score'].tolist() == pytest.approx(expected_combined)
+    assert combined.iloc[-1]['unique_rows_excluding_columns'] == 1
+    # Repeating observations changes singleton counts, but not these contributions.
+    repeated = pd.concat([frame, frame], ignore_index=True)
+    pd.testing.assert_frame_equal(calculate_k_global(repeated, ['sex', 'area']), result.reset_index())
+    pd.testing.assert_frame_equal(calculate_k_combined(repeated, ['sex', 'area'], 1, 2), combined)
+    legacy = metaprivBIDS_core_logic().find_lowest_unique_columns(frame, ['sex', 'area'])
+    assert [legacy[c]['normalized_difference'] for c in ['sex', 'area']] == expected_global
+
+
+@pytest.mark.parametrize('values, expected', [(['A', 'A'], 0.0), (['A', 'A', 'B', 'B'], 0.5)])
+def test_contribution_single_column(values, expected):
+    frame = pd.DataFrame({'value': values})
+    assert calculate_k_global(frame, ['value']).iloc[0]['normalized_difference'] == expected
+    assert calculate_k_combined(frame, ['value'], 1, 1).iloc[0]['score'] == expected
+
+
+def test_contribution_missing_and_empty_data():
+    frame = pd.DataFrame({'value': ['A', 'A', None, None]})
+    assert calculate_k_global(frame, ['value']).iloc[0]['normalized_difference'] == 1.0
+    assert calculate_k_combined(frame, ['value'], 1, 1).iloc[0]['score'] == 0.5
+    for values in [[], [None, None]]:
+        result = calculate_k_global(pd.DataFrame({'value': values}), ['value'])
+        assert np.isnan(result.iloc[0]['normalized_difference'])
+    empty = calculate_k_combined(frame.iloc[:0], ['value'], 1, 1).iloc[0]
+    assert empty['unique_rows'] == empty['unique_rows_excluding_columns'] == 0
+    assert np.isnan(empty['score'])
+
+
 def test_k_global_and_k_combined(data):
     global_result = calculate_k_global(data, ["age", "city", "department"])
     assert list(global_result.columns) == [
