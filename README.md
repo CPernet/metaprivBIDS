@@ -1,9 +1,10 @@
 # metaprivBIDS
 
-metaprivBIDS assesses and reduces disclosure risk in CSV and TSV data. It
-provides reusable Python functions, a complete command-line interface, and a
-local browser interface. SUDA2 is supplied by the established R package
-`sdcMicro`; all other operations run in Python.
+While sharing neuroimaging data, demographic and clinical information of participants must be associated to provide meaningful analysis for prognosis, diagnosis and biomarker identification. MetaprivBIDS assesses and reduces disclosure risk in such demographic and clinical associated data. It provides reusable Python functions, a complete command-line interface, and a local browser interface. SUDA2 is supplied by the established R package `sdcMicro`; all other operations run in Python.
+
+## citation
+
+Please cite: Kibsgaard, E., Sue Jwa, A., Markiewicz, C.J., Rodriguez Gonzalez D., Sainz Pardo, J. Poldrack, R.A. and Pernet C.R. (2026). Assessing metadata privacy in neuroimaging. Imaging Neuroscience 4 IMAG.a.1144. doi: https://doi.org/10.1162/IMAG.a.1144
 
 ## Reproducible installation
 
