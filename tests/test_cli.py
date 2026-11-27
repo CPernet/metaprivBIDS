@@ -84,3 +84,18 @@ def test_pseudonymize_command_exports_released_data_and_key(input_file, tmp_path
         key, left_on="ID", right_on="ID_replacement", validate="one_to_one"
     )["ID_original"].tolist()
     assert restored_ids != [101, 202, 303, 404, 505]
+
+
+def test_binning_exports_plain_range_labels(tmp_path):
+    source = tmp_path / "ages.csv"
+    output = tmp_path / "aggregated.csv"
+    pd.DataFrame({"age": [20, 24, 25, 30, None]}).to_csv(source, index=False)
+
+    assert main([
+        "bin", str(source), "--column", "age", "--bins", "2",
+        "--output", str(output),
+    ]) == 0
+
+    ages = pd.read_csv(output)["age"]
+    assert ages.iloc[:4].tolist() == ["20–25", "20–25", "25–30", "25–30"]
+    assert pd.isna(ages.iloc[-1])

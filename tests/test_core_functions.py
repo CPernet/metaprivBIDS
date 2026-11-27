@@ -150,7 +150,7 @@ def test_bin_numeric_values_by_count_is_non_mutating(data):
     result = bin_numeric_values(data, "age", bins=3)
 
     assert result["age"].astype("string").tolist() == [
-        "[25, 34)", "[34, 43)", "[43, 52]", "[25, 34)", "[34, 43)", "[43, 52]"
+        "25–34", "34–43", "43–52", "25–34", "34–43", "43–52"
     ]
     assert data["age"].tolist() == [25, 35, 45, 25, 35, 52]
 
@@ -161,15 +161,36 @@ def test_bin_numeric_values_by_width_aligns_clean_boundaries():
     result = bin_numeric_values(data, "value", width=5)
 
     assert result["value"].astype("string").tolist()[:-1] == [
-        "[-5, 0)", "[-5, 0)", "[0, 5)", "[0, 5)", "[5, 10]"
+        "-5–0", "-5–0", "0–5", "0–5", "5–10"
     ]
     assert pd.isna(result["value"].iloc[-1])
+
+
+@pytest.mark.parametrize("options", [{"bins": 2}, {"width": 5}])
+def test_binning_plain_labels_preserve_age_boundary_assignments(options):
+    data = pd.DataFrame({"age": [20, 24, 25, 29, 30, np.nan]})
+
+    result = bin_numeric_values(data, "age", **options)
+
+    expected = ["20–25", "20–25", "25–30", "25–30"]
+    expected.append("25–30" if "bins" in options else "30–35")
+    assert result["age"].astype("string").tolist()[:-1] == expected
+    assert pd.isna(result["age"].iloc[-1])
+    pd.testing.assert_frame_equal(
+        data, pd.DataFrame({"age": [20, 24, 25, 29, 30, np.nan]})
+    )
+
+
+def test_binning_plain_labels_preserve_fractional_edges():
+    data = pd.DataFrame({"value": [-0.5, 0.0, 0.5]})
+    result = bin_numeric_values(data, "value", bins=2)
+    assert result["value"].astype("string").tolist() == ["-0.5–0", "0–0.5", "0–0.5"]
 
 
 def test_bin_numeric_values_handles_constant_and_rejects_invalid_configuration():
     constant = pd.DataFrame({"value": [4.5, 4.5, np.nan]})
     result = bin_numeric_values(constant, "value", bins=4)
-    assert result["value"].astype("string").tolist()[:2] == ["[4.5, 4.5]", "[4.5, 4.5]"]
+    assert result["value"].astype("string").tolist()[:2] == ["4.5", "4.5"]
     assert pd.isna(result["value"].iloc[-1])
 
     with pytest.raises(ValueError, match="exactly one"):

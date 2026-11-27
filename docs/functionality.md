@@ -64,7 +64,10 @@ reimplemented in GUI event handlers.
 - Round a numeric column to a selected power of ten using nearest, upward, or
   downward rounding.
 - Bin a numeric column into a chosen number of equal-width intervals or into
-  intervals with a fixed width, preserving missing values.
+  intervals with a fixed width, preserving missing values. Previews and exports
+  use plain range labels such as `20–25`. Intervals include their lower bound
+  and exclude their upper bound, except for the final interval, which includes
+  both bounds. A constant column uses a single-value label.
 - Remove decimals by truncating values toward zero.
 - Add Laplacian or Gaussian noise with explicit scale and optional random seed.
 - Combine two or more categorical values under a replacement label.

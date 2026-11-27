@@ -255,11 +255,14 @@ def bin_numeric_values(
     bins: int | None = None,
     width: float | None = None,
 ) -> pd.DataFrame:
-    """Replace numeric values with equal-width interval labels.
+    """Replace numeric values with plain equal-width range labels (``20–25``).
 
     Exactly one of ``bins`` (a requested number of intervals across the
     observed range) or ``width`` (interval size aligned to its multiples) must
-    be supplied. Missing values remain missing and the input is not mutated.
+    be supplied. Intervals include the lower bound and exclude the upper
+    bound, except that the final interval includes its upper bound. Labels
+    omit interval brackets; a constant column is labelled with its one value.
+    Missing values remain missing and the input is not mutated.
     """
 
     _require_columns(data, [column_name])
@@ -296,7 +299,7 @@ def bin_numeric_values(
     minimum = float(observed.min())
     maximum = float(observed.max())
     if minimum == maximum:
-        label = f"[{_format_bin_edge(minimum)}, {_format_bin_edge(maximum)}]"
+        label = _format_bin_edge(minimum)
         result[column_name] = numeric.map(lambda value: pd.NA if pd.isna(value) else label).astype("string")
         return result
 
@@ -313,8 +316,8 @@ def bin_numeric_values(
     cut_edges = edges.copy()
     cut_edges[-1] = np.nextafter(cut_edges[-1], math.inf)
     labels = [
-        f"[{_format_bin_edge(left)}, {_format_bin_edge(right)}{']' if index == len(edges) - 2 else ')'}"
-        for index, (left, right) in enumerate(zip(edges[:-1], edges[1:]))
+        f"{_format_bin_edge(left)}–{_format_bin_edge(right)}"
+        for left, right in zip(edges[:-1], edges[1:])
     ]
     result[column_name] = pd.cut(
         numeric,

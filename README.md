@@ -103,7 +103,11 @@ Rounding supports `nearest`, `up`, and `down`. The exponent specifies the
 nearest power of ten: `0` rounds to units, `1` to tens, and `2` to hundreds.
 The exponent must be zero or positive.
 Binning uses equal-width intervals. Choose exactly one method: `--bins` sets
-the number of intervals, while `--width` sets the interval increment. Noise
+the number of intervals, while `--width` sets the interval increment. Preview
+and export labels use plain ranges such as `20–25`, without brackets. Each
+interval includes its lower bound and excludes its upper bound; the final
+interval also includes its upper bound. Constant columns use a single-value
+label. Noise
 supports `laplacian` and `gaussian`; `--seed` makes a run reproducible.
 
 ### Replace direct identifiers and shuffle rows
