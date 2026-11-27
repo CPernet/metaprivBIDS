@@ -104,11 +104,65 @@ nearest power of ten: `0` rounds to units, `1` to tens, and `2` to hundreds.
 The exponent must be zero or positive.
 Binning uses equal-width intervals. Choose exactly one method: `--bins` sets
 the number of intervals, while `--width` sets the interval increment. Preview
-and export labels use plain ranges such as `20–25`, without brackets. Each
-interval includes its lower bound and excludes its upper bound; the final
-interval also includes its upper bound. Constant columns use a single-value
-label. Noise
-supports `laplacian` and `gaussian`; `--seed` makes a run reproducible.
+and export labels are compact JSON arrays such as `[20,25]`. These arrays
+store the bounds: each interval includes its lower bound and excludes its
+upper bound, except for the final interval, which includes both. A constant
+column uses equal bounds, for example `[22,22]`.
+
+For numeric age output, enable **Use median and add range column** in the
+browser or pass `--median`:
+
+```console
+conda run --name metaprivbids metaprivBIDS bin participants.tsv --column age --width 5 --median --output participants_anonymised.tsv
+```
+
+This replaces `age` with the midpoint of its interval bounds (the median of
+the two bounds, not the sample median). For example, values in `[20,25]`
+become `age = 22.5` and `age_range = [20,25]`. The same option works for any
+numeric column, adding `<column>_range`. An existing range column causes an
+error rather than being overwritten. Missing values remain missing in both
+columns. TSV exports use `n/a` for missing values; CSV exports quote the
+array cell to preserve its comma. The browser also offers a TSV download.
+
+[BIDS participants files](https://bids-specification.readthedocs.io/en/stable/modality-agnostic-files/data-summary-files.html#participants-file)
+require numeric `age` values; use median mode rather than range-only mode
+for that column. `age_range` is an additional column, not a standard BIDS age
+field. When a JSON dictionary is loaded, binning automatically updates the
+`age` description to median age from binning, defines `age_range`, retains the
+units, and preserves unrelated entries. Old levels and numeric limits are
+removed because they describe the original exact values.
+
+In the browser, load the optional JSON dictionary before or after binning.
+Data downloads then contain both the table and an updated JSON dictionary in
+a ZIP, with matching filenames. **Download JSON dictionary** also exports it
+separately. Restoring a binned column restores its original dictionary entry
+and removes its generated range column.
+
+For the CLI, supply `--metadata`; the updated dictionary is automatically
+saved next to the output table with the same stem and a `.json` extension.
+Use `--metadata-output` to choose another destination. Input dictionaries are
+not overwritten:
+
+```console
+conda run --name metaprivbids metaprivBIDS bin participants.tsv --column age --width 5 --median --metadata participants.json --output participants_anonymised.tsv
+```
+
+For ages measured in years, the resulting dictionary includes:
+
+```json
+{
+  "age": {
+    "Description": "Age generalized to the midpoint of the age_range bounds, not the participant's exact age.",
+    "Units": "year"
+  },
+  "age_range": {
+    "Description": "Age interval as a JSON array [lower,upper]. Includes the lower bound and excludes the upper bound, except for the final interval, which includes both.",
+    "Units": "year"
+  }
+}
+```
+
+Noise supports `laplacian` and `gaussian`; `--seed` makes a run reproducible.
 
 ### Replace direct identifiers and shuffle rows
 

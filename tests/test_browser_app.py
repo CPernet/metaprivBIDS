@@ -1,6 +1,7 @@
 import asyncio
 
 import pandas as pd
+import pytest
 from nicegui import ui
 from nicegui.testing.user_simulation import user_simulation
 
@@ -181,7 +182,8 @@ def test_gui_pseudonymization_realigns_restore_copy_and_retains_key():
         async with user_simulation(root=root) as user:
             await user.open("/")
             workspace = holder["workspace"]
-            workspace._apply_pseudonymization("ID")
+            with user.client:
+                workspace._apply_pseudonymization("ID")
 
             assert workspace.state.identifier_key is not None
             assert workspace.state.identifier_column == "ID"
@@ -197,5 +199,123 @@ def test_gui_pseudonymization_realigns_restore_copy_and_retains_key():
             ).sort_values("ID_original")
             assert reconstructed["age"].tolist() == [21, 35, 48, 62]
             await user.should_see("Download identifier key")
+
+    asyncio.run(scenario())
+
+
+def test_gui_binning_median_checkbox_applies_numeric_age_and_range():
+    async def scenario():
+        holder = {}
+        data = pd.DataFrame({"age": [20, 24, 30, None]})
+
+        def root():
+            holder["workspace"] = create_page(WorkspaceState(
+                filename="participants.tsv", data=data.copy(), original=data.copy(),
+                column_roles={"age": "Continuous"},
+            ))
+
+        async with user_simulation(root=root) as user:
+            await user.open("/")
+            # Rounding and binning each have a numeric-column selector.
+            for element in user.find(kind=ui.select).elements:
+                if element.props.get("label") == "Numeric column":
+                    element.set_value("age")
+            method = next(element for element in user.find(kind=ui.toggle).elements
+                          if set(element.options) == {"bins", "width"})
+            method.set_value("width")
+            width = next(element for element in user.find(kind=ui.number).elements
+                         if element.props.get("label") == "Fixed bin width")
+            width.set_value(5)
+            user.find("Use median and add range column").click()
+            await asyncio.sleep(0)
+            await user.should_see("Intervals: [20,25], [30,35]")
+            user.find("Apply binning").click()
+            await asyncio.sleep(0)
+
+            state = holder["workspace"].state
+            assert state.data["age"].iloc[:3].tolist() == [22.5, 22.5, 32.5]
+            assert state.data["age_range"].iloc[:3].tolist() == ["[20,25]", "[20,25]", "[30,35]"]
+            assert state.data.loc[3, ["age", "age_range"]].isna().all()
+            assert state.column_roles["age"] == "Continuous"
+            assert state.column_roles["age_range"] == "Categorical"
+            assert "age_range" in state.categorical_columns
+            pd.testing.assert_frame_equal(state.original, data)
+            await user.should_see("Download current data (TSV)")
+
+    asyncio.run(scenario())
+
+
+def test_tsv_download_preserves_array_cells_and_bids_missing_values(monkeypatch):
+    from metaprivBIDS.browser_app import _download_frame
+
+    downloads = []
+    monkeypatch.setattr(ui, "download", lambda content, **kwargs: downloads.append((content, kwargs)))
+    frame = pd.DataFrame({"age": [22.5, None], "age_range": ["[20,25]", None]})
+    _download_frame(frame, "participants.tsv")
+    content, options = downloads[0]
+    assert options["filename"] == "participants.tsv"
+    assert content.decode("utf-8").splitlines() == [
+        "age\tage_range", "22.5\t[20,25]", "n/a\tn/a"
+    ]
+
+
+@pytest.mark.parametrize("load_after,metadata", [
+    (False, {"age": {"Description": "Exact age", "Units": "year"}, "sex": {"Description": "Reported sex"}}),
+    (True, {"age": {"Description": "Exact age", "Units": "year"}, "sex": {"Description": "Reported sex"}}),
+    (True, {}),
+])
+def test_gui_binning_updates_and_bundles_loaded_dictionary(monkeypatch, load_after, metadata):
+    from copy import deepcopy
+    from io import BytesIO
+    import json
+    from types import SimpleNamespace
+    from zipfile import ZipFile
+
+    downloads = []
+    monkeypatch.setattr(ui, "download", lambda content, **kwargs: downloads.append((content, kwargs)))
+    original_metadata = deepcopy(metadata)
+
+    async def scenario():
+        holder = {}
+        data = pd.DataFrame({"age": [20, 24, 30, None]})
+
+        def root():
+            holder["workspace"] = create_page(WorkspaceState(
+                filename="participants.tsv", data=data.copy(), original=data.copy(),
+                metadata={} if load_after else metadata,
+                column_roles={"age": "Continuous"},
+            ))
+
+        async with user_simulation(root=root) as user:
+            await user.open("/")
+            workspace = holder["workspace"]
+            with user.client:
+                workspace._apply_binning("age", "width", None, 5, True)
+                if load_after:
+                    async def read_json():
+                        return metadata
+                    await workspace.load_metadata(SimpleNamespace(file=SimpleNamespace(json=read_json)))
+            await user.should_see("Download JSON dictionary")
+            assert workspace.state.metadata["age"]["LongName"] == "Median age from binning"
+            assert "age_range" in workspace.state.metadata
+            user.find("Download current data (TSV)").click()
+            content, options = downloads[-1]
+            assert options["filename"] == "metaprivBIDS_anonymised.zip"
+            with ZipFile(BytesIO(content)) as archive:
+                assert set(archive.namelist()) == {"metaprivBIDS_anonymised.tsv", "metaprivBIDS_anonymised.json"}
+                table = archive.read("metaprivBIDS_anonymised.tsv").decode()
+                dictionary = json.loads(archive.read("metaprivBIDS_anonymised.json"))
+            assert table.splitlines()[1] == "22.5\t[20,25]"
+            assert table.splitlines()[-1] == "n/a\tn/a"
+            assert dictionary == workspace.state.metadata
+            assert dictionary["age_range"]["Units"] == "year"
+            if "sex" in metadata:
+                assert dictionary["sex"] == metadata["sex"]
+            # Restoring age also restores its dictionary and removes its derived range.
+            with user.client:
+                restored = workspace._restore_column("age")
+            pd.testing.assert_frame_equal(restored, data)
+            assert workspace.state.metadata == original_metadata
+            assert metadata == original_metadata
 
     asyncio.run(scenario())

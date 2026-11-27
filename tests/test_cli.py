@@ -86,7 +86,7 @@ def test_pseudonymize_command_exports_released_data_and_key(input_file, tmp_path
     assert restored_ids != [101, 202, 303, 404, 505]
 
 
-def test_binning_exports_plain_range_labels(tmp_path):
+def test_binning_exports_array_range_labels(tmp_path):
     source = tmp_path / "ages.csv"
     output = tmp_path / "aggregated.csv"
     pd.DataFrame({"age": [20, 24, 25, 30, None]}).to_csv(source, index=False)
@@ -97,5 +97,60 @@ def test_binning_exports_plain_range_labels(tmp_path):
     ]) == 0
 
     ages = pd.read_csv(output)["age"]
-    assert ages.iloc[:4].tolist() == ["20–25", "20–25", "25–30", "25–30"]
+    assert ages.iloc[:4].tolist() == ["[20,25]", "[20,25]", "[25,30]", "[25,30]"]
     assert pd.isna(ages.iloc[-1])
+
+
+@pytest.mark.parametrize("extension,separator", [("csv", ","), ("tsv", "\t")])
+def test_binning_median_exports_numeric_age_and_range_array(tmp_path, extension, separator):
+    source = tmp_path / "participants.tsv"
+    output = tmp_path / f"anonymised.{extension}"
+    pd.DataFrame({"participant_id": ["sub-01", "sub-02", "sub-03", "sub-04"],
+                  "age": [20, 24, 30, None]}).to_csv(source, sep="\t", index=False, na_rep="n/a")
+    assert main([
+        "bin", str(source), "--column", "age", "--width", "5", "--median",
+        "--output", str(output),
+    ]) == 0
+    result = pd.read_csv(output, sep=separator)
+    assert result["age"].iloc[:3].tolist() == [22.5, 22.5, 32.5]
+    assert [json.loads(value) for value in result["age_range"].iloc[:3]] == [
+        [20, 25], [20, 25], [30, 35]
+    ]
+    assert result.loc[3, ["age", "age_range"]].isna().all()
+    if extension == "tsv":
+        assert output.read_text().splitlines()[1] == "sub-01\t22.5\t[20,25]"
+        assert output.read_text().splitlines()[-1] == "sub-04\tn/a\tn/a"
+
+
+def test_binning_exports_updated_dictionary_alongside_tsv(tmp_path):
+    source = tmp_path / "participants.tsv"
+    dictionary = tmp_path / "participants.json"
+    output = tmp_path / "anonymised.tsv"
+    pd.DataFrame({"age": [20, 24, 30]}).to_csv(source, sep="\t", index=False)
+    original = {"age": {"Description": "Exact age", "Units": "year"},
+                "sex": {"Description": "Reported sex"}}
+    dictionary.write_text(json.dumps(original))
+
+    assert main(["bin", str(source), "--column", "age", "--width", "5", "--median",
+                 "--metadata", str(dictionary), "--output", str(output)]) == 0
+    metadata = json.loads(output.with_suffix(".json").read_text())
+    assert metadata["age"]["LongName"] == "Median age from binning"
+    assert "age_range" in metadata["age"]["Description"]
+    assert "[lower,upper]" in metadata["age_range"]["Description"]
+    assert metadata["sex"] == original["sex"]
+    assert json.loads(dictionary.read_text()) == original
+    assert pd.read_csv(output, sep="\t")["age"].tolist() == [22.5, 22.5, 32.5]
+
+
+def test_binning_rejects_dictionary_overwrite_before_export(tmp_path):
+    source = tmp_path / "participants.tsv"
+    dictionary = tmp_path / "participants.json"
+    output = tmp_path / "anonymised.tsv"
+    pd.DataFrame({"age": [20, 24]}).to_csv(source, sep="\t", index=False)
+    dictionary.write_text('{"age":{"Description":"Exact age"}}')
+    with pytest.raises(SystemExit):
+        main(["bin", str(source), "--column", "age", "--width", "5", "--median",
+              "--metadata", str(dictionary), "--metadata-output", str(dictionary),
+              "--output", str(output)])
+    assert not output.exists()
+    assert json.loads(dictionary.read_text())["age"]["Description"] == "Exact age"

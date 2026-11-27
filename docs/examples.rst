@@ -76,8 +76,19 @@ Available transformations are:
 * remove decimals by truncating toward zero;
 * add Laplacian or Gaussian noise with a scale and optional random seed;
 * bin numeric values into a chosen number of equal-width intervals or fixed-
-  width intervals; and
+  width intervals, represented as JSON arrays such as ``[20,25]``; and
 * combine categorical values under a broader replacement label.
+
+For age aggregation, enable **Use median and add range column** to keep
+``age`` numeric: a range of ``[20,25]`` produces ``age = 22.5`` and a new
+``age_range`` column containing ``[20,25]``. Median means the midpoint of the
+interval bounds, not the sample median. Use **Download current data (TSV)**
+for a tab-separated export with ``n/a`` for missing values. Describe the
+additional range column and the generalized age in the BIDS JSON sidecar.
+When the optional JSON dictionary is loaded, the application updates these
+definitions automatically and bundles the table and updated dictionary in a
+ZIP download. **Download JSON dictionary** exports the dictionary separately.
+Loading a dictionary after binning also updates the definitions.
 
 When replacement IDs are generated, download the identifier key separately.
 It can reverse the replacement and must be protected as sensitive data. Use
