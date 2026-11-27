@@ -2,10 +2,12 @@
 
 from __future__ import annotations
 
+from copy import deepcopy
 from dataclasses import dataclass, field
 from io import BytesIO
 import json
 import os
+from zipfile import ZIP_DEFLATED, ZipFile
 from pathlib import Path
 from typing import Any, Callable
 
@@ -19,6 +21,7 @@ from .corelogic import (
     SudaResult,
     add_noise,
     bin_numeric_values,
+    update_binning_metadata,
     calculate_k_combined,
     calculate_k_global,
     calculate_mad_outliers,
@@ -64,6 +67,9 @@ class WorkspaceState:
     data: pd.DataFrame | None = None
     original: pd.DataFrame | None = None
     metadata: dict[str, Any] = field(default_factory=dict)
+    metadata_loaded: bool = False
+    original_metadata: dict[str, Any] = field(default_factory=dict)
+    binned_columns: dict[str, bool] = field(default_factory=dict)
     column_roles: dict[str, str] = field(default_factory=dict)
     privacy_quasi_identifiers: list[str] = field(default_factory=list)
     sensitive_attribute: str | None = None
@@ -77,6 +83,9 @@ class WorkspaceState:
     suda_result: SudaResult | None = None
 
     def __post_init__(self) -> None:
+        if self.metadata:
+            self.metadata_loaded = True
+            self.original_metadata = deepcopy(self.metadata)
         if self.data is not None and not self.column_roles:
             profile = profile_columns(self.data)
             self.column_roles = dict(zip(profile["column"], profile["type"]))
@@ -173,7 +182,11 @@ def _columns(frame: pd.DataFrame) -> list[dict[str, Any]]:
 
 
 def _download_frame(frame: pd.DataFrame, filename: str, include_index: bool = False) -> None:
-    ui.download(frame.to_csv(index=include_index).encode("utf-8"), filename=filename)
+    is_tsv = filename.lower().endswith(".tsv")
+    content = frame.to_csv(
+        index=include_index, sep="\t" if is_tsv else ",", na_rep="n/a" if is_tsv else ""
+    )
+    ui.download(content.encode("utf-8"), filename=filename)
 
 
 def _data_table(frame: pd.DataFrame, *, limit: int | None = 500) -> None:
@@ -325,8 +338,14 @@ class BrowserWorkspace:
             metadata = await event.file.json()
             if not isinstance(metadata, dict):
                 raise ValueError("Metadata JSON must contain an object at the top level.")
-            self.state.metadata = metadata
+            updated = metadata
+            for column, use_median in self.state.binned_columns.items():
+                updated = update_binning_metadata(updated, column, use_median=use_median)
+            self.state.original_metadata = deepcopy(metadata)
+            self.state.metadata = updated
+            self.state.metadata_loaded = True
             self.data_panel.refresh()
+            self.transform_panel.refresh()
             ui.notify("Metadata loaded.", type="positive")
         except Exception as error:
             self._notify_error(error)
@@ -655,6 +674,7 @@ class BrowserWorkspace:
         method: str,
         bin_count: float | None,
         bin_width: float | None,
+        use_median: bool = False,
     ) -> None:
         if not column:
             self._notify_error(ValueError("Choose a numeric column to bin."))
@@ -666,11 +686,54 @@ class BrowserWorkspace:
                 column,
                 bins=bin_count if method == "bins" else None,
                 width=float(bin_width) if method == "width" and bin_width is not None else None,
+                use_median=use_median,
             )
-            self.state.column_roles[column] = "Categorical"
+            metadata = self.state.metadata
+            if self.state.metadata_loaded:
+                metadata = update_binning_metadata(metadata, column, use_median=use_median)
+            self.state.metadata = metadata
+            self.state.binned_columns[column] = use_median
+            self.state.column_roles[column] = "Continuous" if use_median else "Categorical"
+            if use_median:
+                self.state.column_roles[f"{column}_range"] = "Categorical"
             return transformed
 
         self._apply_transform(operation, f"Binned {column} into intervals.")
+
+    def _download_current_data(self, extension: str) -> None:
+        filename = f"metaprivBIDS_anonymised.{extension}"
+        if not self.state.metadata_loaded:
+            _download_frame(self._require_data(), filename)
+            return
+        payload = BytesIO()
+        with ZipFile(payload, "w", compression=ZIP_DEFLATED) as archive:
+            archive.writestr(filename, self._require_data().to_csv(
+                sep="\t" if extension == "tsv" else ",", index=False,
+                na_rep="n/a" if extension == "tsv" else "",
+            ))
+            archive.writestr("metaprivBIDS_anonymised.json", json.dumps(
+                self.state.metadata, indent=2, ensure_ascii=False,
+            ) + "\n")
+        ui.download(payload.getvalue(), filename="metaprivBIDS_anonymised.zip")
+
+    def _restore_column(self, column: str) -> pd.DataFrame:
+        restored = revert_column(self._require_data(), self.state.original, column)
+        if column in self.state.binned_columns:
+            use_median = self.state.binned_columns.pop(column)
+            columns = [column]
+            if use_median:
+                range_column = f"{column}_range"
+                restored = restored.drop(columns=[range_column])
+                self.state.column_roles.pop(range_column, None)
+                columns.append(range_column)
+            for name in columns:
+                if name in self.state.original_metadata:
+                    self.state.metadata[name] = deepcopy(self.state.original_metadata[name])
+                else:
+                    self.state.metadata.pop(name, None)
+            profile = profile_columns(self.state.original[[column]])
+            self.state.column_roles[column] = profile.iloc[0]["type"]
+        return restored
 
     def _apply_pseudonymization(self, identifier_column: str | None) -> None:
         if not identifier_column:
@@ -803,6 +866,11 @@ class BrowserWorkspace:
                     {"bins": "Number of bins", "width": "Fixed bin width"},
                     value="bins",
                 ).props("spread no-caps color=teal-8").classes("w-full")
+                bin_median = ui.checkbox("Use median and add range column", value=False)
+                ui.label(
+                    "Median uses the midpoint of the interval bounds: age 22.5, age_range [20,25]. "
+                    "Ranges include the lower bound; only the final range includes its upper bound."
+                ).classes("mp-muted text-sm")
                 with ui.row().classes("w-full items-end gap-3"):
                     bin_count = ui.number(
                         "Number of equal-width bins", value=5, min=2, step=1
@@ -819,6 +887,7 @@ class BrowserWorkspace:
                             bin_method.value,
                             bin_count.value,
                             bin_width.value,
+                            bin_median.value,
                         ),
                     ).props("unelevated color=teal-8")
                 preview = ui.label(
@@ -840,8 +909,10 @@ class BrowserWorkspace:
                             column,
                             bins=bin_count.value if use_count else None,
                             width=float(bin_width.value) if not use_count else None,
+                            use_median=bin_median.value,
                         )
-                        binned = transformed[column]
+                        range_column = f"{column}_range" if bin_median.value else column
+                        binned = transformed[range_column]
                         intervals = (
                             binned.cat.categories.astype(str).tolist()
                             if isinstance(binned.dtype, pd.CategoricalDtype)
@@ -857,6 +928,7 @@ class BrowserWorkspace:
                 bin_column.on_value_change(lambda _: update_binning_controls())
                 bin_count.on_value_change(lambda _: update_binning_controls())
                 bin_width.on_value_change(lambda _: update_binning_controls())
+                bin_median.on_value_change(lambda _: update_binning_controls())
 
             with ui.card().classes("mp-panel w-full p-5"):
                 _section("Categorical generalisation", "Combine values under a new, broader label.")
@@ -923,19 +995,32 @@ class BrowserWorkspace:
                         "Restore column",
                         icon="undo",
                         on_click=lambda: self._apply_transform(
-                            lambda: revert_column(
-                                self._require_data(), self.state.original, restore.value
-                            ),
+                            lambda: self._restore_column(restore.value),
                             f"Restored {restore.value}.",
                         ),
                     ).props("outline color=teal-8")
                     ui.button(
                         "Download current data",
                         icon="download",
-                        on_click=lambda: _download_frame(
-                            self._require_data(), "metaprivBIDS_anonymised.csv"
-                        ),
+                        on_click=lambda: self._download_current_data("csv"),
                     ).props("unelevated color=teal-8")
+                    ui.button(
+                        "Download current data (TSV)",
+                        icon="download",
+                        on_click=lambda: self._download_current_data("tsv"),
+                    ).props("outline color=teal-8")
+                if self.state.metadata_loaded:
+                    ui.label(
+                        "Data downloads include the updated JSON dictionary in a ZIP file."
+                    ).classes("mp-muted text-sm")
+                    ui.button(
+                        "Download JSON dictionary",
+                        icon="download",
+                        on_click=lambda: ui.download(
+                            (json.dumps(self.state.metadata, indent=2, ensure_ascii=False) + "\n").encode("utf-8"),
+                            filename="metaprivBIDS_anonymised.json",
+                        ),
+                    ).props("outline color=teal-8")
 
     async def _run_cig(
         self, selected: list[str], percentile: float, mask_value: str | None

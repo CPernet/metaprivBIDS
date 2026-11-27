@@ -126,9 +126,12 @@ class metaprivBIDS_core_logic:
         *,
         bins: int | None = None,
         width: float | None = None,
+        use_median: bool = False,
     ) -> pd.DataFrame:
         self.original_columns.setdefault(column_name, data[column_name].copy())
-        return bin_numeric_values(data, column_name, bins=bins, width=width)
+        return bin_numeric_values(
+            data, column_name, bins=bins, width=width, use_median=use_median
+        )
 
     def revert_to_original(self, data: pd.DataFrame, column_name: str) -> pd.DataFrame:
         if column_name not in self.original_columns:

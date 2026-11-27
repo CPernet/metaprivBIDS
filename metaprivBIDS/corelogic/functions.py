@@ -7,6 +7,7 @@ browser interfaces.
 
 from __future__ import annotations
 
+from copy import deepcopy
 from dataclasses import dataclass
 from itertools import combinations
 import json
@@ -254,12 +255,21 @@ def bin_numeric_values(
     *,
     bins: int | None = None,
     width: float | None = None,
+    use_median: bool = False,
 ) -> pd.DataFrame:
-    """Replace numeric values with equal-width interval labels.
+    """Aggregate numeric values into JSON range labels (``[20,25]``).
 
     Exactly one of ``bins`` (a requested number of intervals across the
     observed range) or ``width`` (interval size aligned to its multiples) must
-    be supplied. Missing values remain missing and the input is not mutated.
+    be supplied. Intervals include the lower bound and exclude the upper
+    bound, except that the final interval includes its upper bound. The two
+    bounds are serialized as a compact JSON array; they do not denote closed
+    mathematical intervals. A constant column uses equal bounds.
+
+    With ``use_median=True``, replace the source column with the midpoint of
+    its interval bounds (not the sample median) and add ``<column>_range``.
+    Existing range columns are never overwritten. Missing values remain
+    missing in both columns and the input is not mutated.
     """
 
     _require_columns(data, [column_name])
@@ -286,19 +296,37 @@ def bin_numeric_values(
         if not math.isfinite(width) or width <= 0:
             raise ValueError("width must be a positive finite number.")
 
+    range_column = f"{column_name}_range"
+    if use_median and range_column in data.columns:
+        raise ValueError(f"Range column already exists: {range_column}")
     numeric = pd.to_numeric(data[column_name], errors="raise")
     observed = numeric.dropna()
+    if not np.isfinite(observed.to_numpy(dtype=float)).all():
+        raise ValueError("Binning requires finite numeric values.")
     result = data.copy()
-    if observed.empty:
-        result[column_name] = pd.Series(pd.NA, index=data.index, dtype="string")
+
+    def finish(ranges: pd.Series, midpoints: pd.Series) -> pd.DataFrame:
+        # JSON text stays hashable for downstream privacy grouping, without
+        # retaining unused pandas categories as empty disclosure groups.
+        ranges = ranges.astype("string")
+        result[column_name] = midpoints if use_median else ranges
+        if use_median:
+            result[range_column] = ranges
         return result
+
+    if observed.empty:
+        return finish(
+            pd.Series(pd.NA, index=data.index, dtype="string"),
+            pd.Series(np.nan, index=data.index, dtype=float),
+        )
 
     minimum = float(observed.min())
     maximum = float(observed.max())
     if minimum == maximum:
-        label = f"[{_format_bin_edge(minimum)}, {_format_bin_edge(maximum)}]"
-        result[column_name] = numeric.map(lambda value: pd.NA if pd.isna(value) else label).astype("string")
-        return result
+        edge = _format_bin_edge(minimum)
+        label = f"[{edge},{edge}]"
+        ranges = numeric.map(lambda value: pd.NA if pd.isna(value) else label).astype("string")
+        return finish(ranges, numeric.astype(float))
 
     if bins is not None:
         edges = np.linspace(minimum, maximum, bins + 1, dtype=float)
@@ -313,10 +341,10 @@ def bin_numeric_values(
     cut_edges = edges.copy()
     cut_edges[-1] = np.nextafter(cut_edges[-1], math.inf)
     labels = [
-        f"[{_format_bin_edge(left)}, {_format_bin_edge(right)}{']' if index == len(edges) - 2 else ')'}"
-        for index, (left, right) in enumerate(zip(edges[:-1], edges[1:]))
+        f"[{_format_bin_edge(left)},{_format_bin_edge(right)}]"
+        for left, right in zip(edges[:-1], edges[1:])
     ]
-    result[column_name] = pd.cut(
+    ranges = pd.cut(
         numeric,
         bins=cut_edges,
         labels=labels,
@@ -324,7 +352,54 @@ def bin_numeric_values(
         include_lowest=True,
         ordered=True,
     )
-    return result
+    midpoints = ranges.cat.codes.map(
+        dict(enumerate(edges[:-1] / 2 + edges[1:] / 2))
+    ).astype(float)
+    return finish(ranges, midpoints)
+
+
+def update_binning_metadata(
+    metadata: dict[str, Any], column_name: str, *, use_median: bool = False,
+) -> dict[str, Any]:
+    """Return a data dictionary describing binned values and any range column."""
+
+    if not isinstance(metadata, dict):
+        raise ValueError("Metadata JSON must contain an object at the top level.")
+    updated = deepcopy(metadata)
+    definition = updated.get(column_name, {})
+    if not isinstance(definition, dict):
+        raise ValueError(f"Metadata definition for {column_name} must be an object.")
+    units = definition.get("Units", "year" if column_name.lower() == "age" else None)
+    range_column = f"{column_name}_range" if use_median else column_name
+    description = (
+        f"Binned {column_name} range as a JSON array [lower,upper]. "
+        "Includes the lower bound and excludes the upper bound, except for the "
+        "final interval, which includes both bounds."
+    )
+    range_definition = {"LongName": f"Binned {column_name} range", "Description": description}
+    if units is not None:
+        range_definition["Units"] = units
+    # Original levels and limits describe exact values, not generalized bins.
+    for key in ("Levels", "Minimum", "Maximum"):
+        definition.pop(key, None)
+    if use_median:
+        definition.update({
+            "LongName": f"Median {column_name} from binning",
+            "Description": (
+                f"Median {column_name} from binning: midpoint of the two interval "
+                f"bounds in {range_column}, not the sample median or exact value."
+            ),
+            "Format": "number",
+        })
+        if units is not None:
+            definition["Units"] = units
+        updated[column_name] = definition
+        updated[range_column] = range_definition
+    else:
+        definition.pop("Format", None)
+        definition.update(range_definition)
+        updated[column_name] = definition
+    return updated
 
 
 def pseudonymize_identifiers(

@@ -64,7 +64,25 @@ reimplemented in GUI event handlers.
 - Round a numeric column to a selected power of ten using nearest, upward, or
   downward rounding.
 - Bin a numeric column into a chosen number of equal-width intervals or into
-  intervals with a fixed width, preserving missing values.
+  intervals with a fixed width, preserving missing values. Previews and exports
+  use compact JSON array labels such as `[20,25]`. Intervals include their lower
+  bound and exclude their upper bound, except for the final interval, which
+  includes both. A constant column uses equal bounds, such as `[22,22]`.
+- Optionally replace numeric values with the midpoint of the interval bounds
+  (the median of the bounds, not the sample median) and add a `<column>_range`
+  column. For example, `age` becomes `22.5` with `age_range` set to `[20,25]`.
+  Existing range columns are protected from overwriting. Missing values remain
+  missing in both columns. Enable **Use median and add range column** in the
+  browser or pass `--median` to the CLI `bin` command.
+- Export the working copy as CSV or TSV; TSV uses `n/a` for missing values.
+  For BIDS numeric `age`, use median mode. If a JSON dictionary is loaded,
+  update the age definition and define `age_range`, retaining units and
+  unrelated entries. Data downloads bundle the table and updated dictionary
+  in a ZIP; a separate JSON download is also available. Loading the dictionary
+  after binning applies the same definitions. Restoring the original column
+  restores its dictionary entry and removes the generated range column.
+  CLI `bin --metadata participants.json` writes an updated sidecar next to
+  the output table; `--metadata-output` selects a different destination.
 - Remove decimals by truncating values toward zero.
 - Add Laplacian or Gaussian noise with explicit scale and optional random seed.
 - Combine two or more categorical values under a replacement label.

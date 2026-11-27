@@ -150,7 +150,7 @@ def test_bin_numeric_values_by_count_is_non_mutating(data):
     result = bin_numeric_values(data, "age", bins=3)
 
     assert result["age"].astype("string").tolist() == [
-        "[25, 34)", "[34, 43)", "[43, 52]", "[25, 34)", "[34, 43)", "[43, 52]"
+        "[25,34]", "[34,43]", "[43,52]", "[25,34]", "[34,43]", "[43,52]"
     ]
     assert data["age"].tolist() == [25, 35, 45, 25, 35, 52]
 
@@ -161,15 +161,36 @@ def test_bin_numeric_values_by_width_aligns_clean_boundaries():
     result = bin_numeric_values(data, "value", width=5)
 
     assert result["value"].astype("string").tolist()[:-1] == [
-        "[-5, 0)", "[-5, 0)", "[0, 5)", "[0, 5)", "[5, 10]"
+        "[-5,0]", "[-5,0]", "[0,5]", "[0,5]", "[5,10]"
     ]
     assert pd.isna(result["value"].iloc[-1])
+
+
+@pytest.mark.parametrize("options", [{"bins": 2}, {"width": 5}])
+def test_binning_array_labels_preserve_age_boundary_assignments(options):
+    data = pd.DataFrame({"age": [20, 24, 25, 29, 30, np.nan]})
+
+    result = bin_numeric_values(data, "age", **options)
+
+    expected = ["[20,25]", "[20,25]", "[25,30]", "[25,30]"]
+    expected.append("[25,30]" if "bins" in options else "[30,35]")
+    assert result["age"].astype("string").tolist()[:-1] == expected
+    assert pd.isna(result["age"].iloc[-1])
+    pd.testing.assert_frame_equal(
+        data, pd.DataFrame({"age": [20, 24, 25, 29, 30, np.nan]})
+    )
+
+
+def test_binning_array_labels_preserve_fractional_edges():
+    data = pd.DataFrame({"value": [-0.5, 0.0, 0.5]})
+    result = bin_numeric_values(data, "value", bins=2)
+    assert result["value"].astype("string").tolist() == ["[-0.5,0]", "[0,0.5]", "[0,0.5]"]
 
 
 def test_bin_numeric_values_handles_constant_and_rejects_invalid_configuration():
     constant = pd.DataFrame({"value": [4.5, 4.5, np.nan]})
     result = bin_numeric_values(constant, "value", bins=4)
-    assert result["value"].astype("string").tolist()[:2] == ["[4.5, 4.5]", "[4.5, 4.5]"]
+    assert result["value"].astype("string").tolist()[:2] == ["[4.5,4.5]", "[4.5,4.5]"]
     assert pd.isna(result["value"].iloc[-1])
 
     with pytest.raises(ValueError, match="exactly one"):
@@ -294,3 +315,97 @@ def test_suda2_uses_conda_r_runtime(data):
         "city",
         "department",
     }
+
+
+@pytest.mark.parametrize("options", [{"bins": 2}, {"width": 5}])
+def test_binning_median_keeps_numeric_age_and_adds_json_range(options):
+    # Sample median of the first bin is 21, whereas its midpoint is 22.5.
+    data = pd.DataFrame({"age": [20, 21, 24, 25, 30, np.nan], "group": list("abcdef")},
+                        index=[10, 20, 30, 40, 50, 60])
+    original = data.copy(deep=True)
+    result = bin_numeric_values(data, "age", use_median=True, **options)
+    expected = [22.5, 22.5, 22.5, 27.5, 27.5 if "bins" in options else 32.5]
+    assert result["age"].iloc[:-1].tolist() == expected
+    assert pd.api.types.is_numeric_dtype(result["age"])
+    ranges = [json.loads(value) for value in result["age_range"].iloc[:-1]]
+    assert ranges == [[20, 25], [20, 25], [20, 25], [25, 30],
+                      [25, 30] if "bins" in options else [30, 35]]
+    assert pd.isna(result["age"].iloc[-1])
+    assert pd.isna(result["age_range"].iloc[-1])
+    pd.testing.assert_series_equal(result["group"], data["group"])
+    pd.testing.assert_frame_equal(data, original)
+    # Serialized arrays must remain usable as categorical quasi-identifiers.
+    assert calculate_privacy_metrics(result.iloc[:3], ["age_range"])["k_anonymity"] == 3
+
+
+@pytest.mark.parametrize("values", [[4.5, 4.5, np.nan], [np.nan, np.nan], []])
+def test_binning_median_constant_empty_and_missing(values):
+    data = pd.DataFrame({"age": pd.Series(values, dtype=float)})
+    result = bin_numeric_values(data, "age", bins=2, use_median=True)
+    assert list(result.columns) == ["age", "age_range"]
+    assert pd.api.types.is_numeric_dtype(result["age"])
+    assert result["age"].isna().tolist() == data["age"].isna().tolist()
+    assert result["age_range"].isna().tolist() == data["age"].isna().tolist()
+    if data["age"].notna().any():
+        assert result["age"].iloc[0] == 4.5
+        assert json.loads(result["age_range"].iloc[0]) == [4.5, 4.5]
+
+
+def test_binning_median_rejects_existing_range_column_without_mutation():
+    data = pd.DataFrame({"age": [20, 25], "age_range": ["keep", "these"]})
+    original = data.copy(deep=True)
+    with pytest.raises(ValueError, match="Range column already exists: age_range"):
+        bin_numeric_values(data, "age", width=5, use_median=True)
+    pd.testing.assert_frame_equal(data, original)
+
+
+def test_binning_median_compatibility_wrapper():
+    logic = metaprivBIDS_core_logic()
+    data = pd.DataFrame({"age": [20, 24, 30]})
+    result = logic.bin_numeric_values(data, "age", width=5, use_median=True)
+    assert result["age"].tolist() == [22.5, 22.5, 32.5]
+    assert result["age_range"].tolist() == ["[20,25]", "[20,25]", "[30,35]"]
+
+
+@pytest.mark.parametrize("value", [np.inf, -np.inf])
+def test_binning_rejects_non_finite_json_bounds(value):
+    with pytest.raises(ValueError, match="finite numeric values"):
+        bin_numeric_values(pd.DataFrame({"age": [value, value]}), "age", bins=2)
+
+
+def test_binning_metadata_updates_definitions_without_mutating_dictionary():
+    from copy import deepcopy
+    from metaprivBIDS.corelogic import update_binning_metadata
+
+    metadata = {
+        "age": {"Description": "Exact age", "Units": "year", "Maximum": 30,
+                "Levels": {"20": "twenty"}, "TermURL": "https://example.org/age"},
+        "sex": {"Description": "Reported sex", "Levels": {"F": "female"}},
+    }
+    original = deepcopy(metadata)
+    result = update_binning_metadata(metadata, "age", use_median=True)
+    assert result["age"]["LongName"] == "Median age from binning"
+    assert "midpoint" in result["age"]["Description"]
+    assert result["age"]["Format"] == "number"
+    assert "Maximum" not in result["age"] and "Levels" not in result["age"]
+    assert result["age"]["TermURL"] == metadata["age"]["TermURL"]
+    assert "JSON array [lower,upper]" in result["age_range"]["Description"]
+    assert result["age_range"]["Units"] == "year"
+    assert result["sex"] == original["sex"]
+    assert metadata == original
+    result["sex"]["Levels"]["M"] = "male"
+    assert metadata == original
+
+
+def test_binning_metadata_range_only_and_missing_age_definition():
+    from metaprivBIDS.corelogic import update_binning_metadata
+
+    result = update_binning_metadata({}, "age", use_median=True)
+    assert result["age"]["Units"] == result["age_range"]["Units"] == "year"
+    result = update_binning_metadata({"age": {"Format": "number", "Units": "month"}}, "age")
+    assert "age_range" not in result
+    assert "JSON array" in result["age"]["Description"]
+    assert result["age"]["Units"] == "month"
+    assert "Format" not in result["age"]
+    with pytest.raises(ValueError, match="must be an object"):
+        update_binning_metadata({"age": "invalid definition"}, "age", use_median=True)

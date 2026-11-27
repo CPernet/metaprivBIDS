@@ -13,6 +13,7 @@ import pandas as pd
 from .corelogic import (
     add_noise,
     bin_numeric_values,
+    update_binning_metadata,
     calculate_k_combined,
     calculate_k_global,
     calculate_mad_outliers,
@@ -58,7 +59,7 @@ def _write_or_print(data: pd.DataFrame, output: str | None, include_index: bool 
 
 def _save_transformed(data: pd.DataFrame, output: str) -> None:
     separator = "\t" if Path(output).suffix.lower() == ".tsv" else ","
-    data.to_csv(output, sep=separator, index=False)
+    data.to_csv(output, sep=separator, index=False, na_rep="n/a" if separator == "\t" else "")
     print(f"Saved {output}")
 
 
@@ -104,6 +105,12 @@ def build_parser() -> argparse.ArgumentParser:
     binning_method = binning.add_mutually_exclusive_group(required=True)
     binning_method.add_argument("--bins", type=int, help="Number of equal-width bins.")
     binning_method.add_argument("--width", type=float, help="Fixed bin width.")
+    binning.add_argument(
+        "--median", action="store_true",
+        help="Replace values with bin midpoints and add a <column>_range JSON array column.",
+    )
+    binning.add_argument("--metadata", help="Optional input JSON data dictionary.")
+    binning.add_argument("--metadata-output", help="Updated dictionary path (default: output stem + .json).")
     binning.add_argument("--output", required=True)
 
     pseudonymize = subcommands.add_parser(
@@ -185,10 +192,23 @@ def run(args: argparse.Namespace) -> int:
     elif args.command == "round":
         _save_transformed(round_values(data, args.column, args.exponent, args.mode), args.output)
     elif args.command == "bin":
-        _save_transformed(
-            bin_numeric_values(data, args.column, bins=args.bins, width=args.width),
-            args.output,
+        if args.metadata_output and not args.metadata:
+            raise ValueError("--metadata-output requires --metadata.")
+        metadata = None
+        if args.metadata:
+            metadata = update_binning_metadata(
+                load_json_metadata(args.metadata), args.column, use_median=args.median
+            )
+            metadata_output = Path(args.metadata_output) if args.metadata_output else Path(args.output).with_suffix(".json")
+            if metadata_output.resolve() in {Path(args.input).resolve(), Path(args.output).resolve(), Path(args.metadata).resolve()}:
+                raise ValueError("The metadata output must not overwrite input data, input metadata, or output data.")
+        transformed = bin_numeric_values(
+            data, args.column, bins=args.bins, width=args.width, use_median=args.median
         )
+        _save_transformed(transformed, args.output)
+        if metadata is not None:
+            metadata_output.write_text(json.dumps(metadata, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+            print(f"Saved updated metadata {metadata_output}")
     elif args.command == "pseudonymize":
         result = pseudonymize_identifiers(data, args.id_column)
         _save_transformed(result.data, args.output)
